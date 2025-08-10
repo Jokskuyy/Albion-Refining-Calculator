@@ -106,18 +106,23 @@ export const calculateResourceBasedRefining = (
   while (iterations < maxIterations) {
     // Check if we have enough materials for at least one craft
     const canCraftFromRaw = currentRawMaterials >= requirements.raw;
-    const canCraftFromRefined = tier <= 2 || currentLowerTierRefined >= requirements.refined;
-    
+    const canCraftFromRefined =
+      tier <= 2 || currentLowerTierRefined >= requirements.refined;
+
     if (!canCraftFromRaw || !canCraftFromRefined) {
       break; // Not enough materials to continue
     }
 
     // Calculate how many crafts we can do this iteration
     const maxCraftsFromRaw = Math.floor(currentRawMaterials / requirements.raw);
-    const maxCraftsFromRefined = tier > 2 
-      ? Math.floor(currentLowerTierRefined / requirements.refined) 
-      : Infinity;
-    const craftsThisIteration = Math.min(maxCraftsFromRaw, maxCraftsFromRefined);
+    const maxCraftsFromRefined =
+      tier > 2
+        ? Math.floor(currentLowerTierRefined / requirements.refined)
+        : Infinity;
+    const craftsThisIteration = Math.min(
+      maxCraftsFromRaw,
+      maxCraftsFromRefined
+    );
 
     if (craftsThisIteration === 0) {
       break; // Can't craft anything
@@ -125,15 +130,24 @@ export const calculateResourceBasedRefining = (
 
     // Calculate materials used this iteration
     const rawUsedThisIteration = craftsThisIteration * requirements.raw;
-    const lowerTierUsedThisIteration = tier > 2 ? craftsThisIteration * requirements.refined : 0;
+    const lowerTierUsedThisIteration =
+      tier > 2 ? craftsThisIteration * requirements.refined : 0;
 
     // Calculate returns this iteration
-    const rawReturnedThisIteration = Math.floor(rawUsedThisIteration * (effectiveReturnRate / 100));
-    const lowerTierReturnedThisIteration = Math.floor(lowerTierUsedThisIteration * (effectiveReturnRate / 100));
+    const rawReturnedThisIteration = Math.floor(
+      rawUsedThisIteration * (effectiveReturnRate / 100)
+    );
+    const lowerTierReturnedThisIteration = Math.floor(
+      lowerTierUsedThisIteration * (effectiveReturnRate / 100)
+    );
 
     // Update materials
-    currentRawMaterials = currentRawMaterials - rawUsedThisIteration + rawReturnedThisIteration;
-    currentLowerTierRefined = currentLowerTierRefined - lowerTierUsedThisIteration + lowerTierReturnedThisIteration;
+    currentRawMaterials =
+      currentRawMaterials - rawUsedThisIteration + rawReturnedThisIteration;
+    currentLowerTierRefined =
+      currentLowerTierRefined -
+      lowerTierUsedThisIteration +
+      lowerTierReturnedThisIteration;
 
     // Update totals
     totalRefinedProduced += craftsThisIteration;
@@ -149,15 +163,15 @@ export const calculateResourceBasedRefining = (
     iterations++;
   }
 
-  // Calculate final costs and profits  
+  // Calculate final costs and profits
   // Cost should be based on initial materials owned (opportunity cost)
   const rawMaterialCost = ownedRawMaterials * rawMaterialPrice;
   const lowerTierRefinedCost = ownedLowerTierRefined * lowerTierRefinedPrice;
   const totalMaterialCost = rawMaterialCost + lowerTierRefinedCost;
 
   // Calculate value of returned materials from all refining iterations
-  const returnedMaterialsValue = 
-    lastIterationRawReturned * rawMaterialPrice + 
+  const returnedMaterialsValue =
+    lastIterationRawReturned * rawMaterialPrice +
     lastIterationLowerTierReturned * lowerTierRefinedPrice;
 
   const baseStationFee = totalMaterialCost * (stationFeePercent / 100);
@@ -173,9 +187,11 @@ export const calculateResourceBasedRefining = (
   const grossProfit = finalInventoryValue - totalMaterialCost;
   const totalCost = totalMaterialCost + stationFee;
   const netProfit = finalInventoryValue - totalCost;
-  
-  const profitMargin = finalInventoryValue > 0 ? (netProfit / finalInventoryValue) * 100 : 0;
-  const profitPerUnit = totalRefinedProduced > 0 ? netProfit / totalRefinedProduced : 0;
+
+  const profitMargin =
+    finalInventoryValue > 0 ? (netProfit / finalInventoryValue) * 100 : 0;
+  const profitPerUnit =
+    totalRefinedProduced > 0 ? netProfit / totalRefinedProduced : 0;
 
   return {
     refinementsMade: totalRefinedProduced,

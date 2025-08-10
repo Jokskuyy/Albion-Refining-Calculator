@@ -151,8 +151,8 @@ export const calculateRefiningProfit = (
   const profitPerFocus =
     useFocus && focusCost > 0 ? netProfit / (focusCost / focusCostPerCraft) : 0;
   const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
-  const returnedMaterialsValue = 
-    rawMaterialsReturned * rawMaterialPrice + 
+  const returnedMaterialsValue =
+    rawMaterialsReturned * rawMaterialPrice +
     lowerTierRefinedReturned * lowerTierRefinedPrice;
 
   return {

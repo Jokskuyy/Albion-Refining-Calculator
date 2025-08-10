@@ -403,23 +403,6 @@ export const RefiningCalculator: React.FC = () => {
                     onChange={setUseFocus}
                     label="Use Focus (53.9% return rate)"
                   />
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Market Tax (%)
-                    </label>
-                    <input
-                      type="number"
-                      value={marketTaxPercent}
-                      onChange={(e) =>
-                        setMarketTaxPercent(Number(e.target.value))
-                      }
-                      className="input-field"
-                      min="0"
-                      max="8"
-                      step="0.1"
-                    />
-                  </div>
                 </div>
               </div>
             </div>
@@ -431,6 +414,24 @@ export const RefiningCalculator: React.FC = () => {
               <>
                 {calculationMode === "target" && result && (
                   <>
+                    {/* Under Construction Notice */}
+                    <div className="card p-6 animate-scale-in">
+                      <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-4">
+                        <div className="flex items-center gap-3">
+                          <Settings className="w-5 h-5 text-yellow-400" />
+                          <div>
+                            <div className="text-yellow-400 font-medium">
+                              Target Mode - Under Construction
+                            </div>
+                            <div className="text-yellow-300/80 text-sm mt-1">
+                              This mode is currently being refined. Some
+                              features may not work correctly.
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Material Requirements */}
                     <div className="card p-6 animate-scale-in">
                       <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
@@ -515,7 +516,9 @@ export const RefiningCalculator: React.FC = () => {
 
                       <div className="space-y-3 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-400">{rawMaterialName}:</span>
+                          <span className="text-gray-400">
+                            {rawMaterialName}:
+                          </span>
                           <span className="font-medium">
                             {result.rawMaterialCost.toLocaleString()} 🪙
                           </span>
@@ -531,13 +534,6 @@ export const RefiningCalculator: React.FC = () => {
                             </span>
                           </div>
                         )}
-
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Market tax:</span>
-                          <span className="font-medium">
-                            {result.marketTax.toLocaleString()} 🪙
-                          </span>
-                        </div>
 
                         {useFocus && (
                           <div className="flex justify-between">
@@ -634,9 +630,7 @@ export const RefiningCalculator: React.FC = () => {
                         </div>
 
                         <div className="flex justify-between">
-                          <span className="text-gray-400">
-                            Profit margin:
-                          </span>
+                          <span className="text-gray-400">Profit margin:</span>
                           <span
                             className={`font-medium ${
                               result.profitMargin >= 0
@@ -809,7 +803,9 @@ export const RefiningCalculator: React.FC = () => {
                         </div>
 
                         <div className="flex justify-between">
-                          <span className="text-gray-400">{rawMaterialName}:</span>
+                          <span className="text-gray-400">
+                            {rawMaterialName}:
+                          </span>
                           <span className="font-medium text-red-400">
                             {resourceResult.rawMaterialCost.toLocaleString()} 🪙
                           </span>
@@ -821,7 +817,8 @@ export const RefiningCalculator: React.FC = () => {
                               {lowerTierRefinedName}:
                             </span>
                             <span className="font-medium text-red-400">
-                              {resourceResult.lowerTierRefinedCost.toLocaleString()} 🪙
+                              {resourceResult.lowerTierRefinedCost.toLocaleString()}{" "}
+                              🪙
                             </span>
                           </div>
                         )}
@@ -831,13 +828,16 @@ export const RefiningCalculator: React.FC = () => {
                             Materials returned value:
                           </span>
                           <span className="font-medium text-blue-400">
-                            {resourceResult.returnedMaterialsValue.toLocaleString()} 🪙
+                            {resourceResult.returnedMaterialsValue.toLocaleString()}{" "}
+                            🪙
                           </span>
                         </div>
 
                         <div className="border-t border-dark-600 pt-2">
                           <div className="flex justify-between">
-                            <span className="text-gray-400">Total revenue:</span>
+                            <span className="text-gray-400">
+                              Total revenue:
+                            </span>
                             <span className="font-medium text-green-400">
                               {resourceResult.totalRevenue.toLocaleString()} 🪙
                             </span>
@@ -890,9 +890,7 @@ export const RefiningCalculator: React.FC = () => {
                         </div>
 
                         <div className="flex justify-between">
-                          <span className="text-gray-400">
-                            Profit margin:
-                          </span>
+                          <span className="text-gray-400">Profit margin:</span>
                           <span
                             className={`font-medium ${
                               resourceResult.profitMargin >= 0
@@ -903,18 +901,6 @@ export const RefiningCalculator: React.FC = () => {
                             {resourceResult.profitMargin.toFixed(1)}%
                           </span>
                         </div>
-
-                        {useFocus && resourceResult.focusUsed > 0 && (
-                          <div className="flex justify-between">
-                            <span className="text-gray-400 flex items-center gap-1">
-                              <Focus className="w-3 h-3" />
-                              Focus used:
-                            </span>
-                            <span className="font-medium">
-                              {resourceResult.focusUsed.toLocaleString()} ⚡
-                            </span>
-                          </div>
-                        )}
                       </div>
 
                       {resourceResult.netProfit >= 0 ? (
