@@ -1,10 +1,10 @@
 // Material types and their configurations
 export const MATERIAL_TYPES = {
-  ore: { name: "Ore", refined: "Metal Bars", icon: "⚒️" },
+  ore: { name: "Ore", refined: "Bars", icon: "⚒️" },
   hide: { name: "Hide", refined: "Leather", icon: "🛡️" },
   fiber: { name: "Fiber", refined: "Cloth", icon: "🧵" },
   wood: { name: "Wood", refined: "Planks", icon: "🪵" },
-  stone: { name: "Stone", refined: "Stone Blocks", icon: "🗿" },
+  stone: { name: "Stone", refined: "Blocks", icon: "🗿" },
 } as const;
 
 export type MaterialType = keyof typeof MATERIAL_TYPES;
@@ -64,9 +64,11 @@ export const calculateReturnRate = (
   masteryLevel: number,
   useFocus: boolean
 ): number => {
+  if (useFocus) {
+    return 53.9; // Fixed focus return rate
+  }
   const masteryBonus = calculateMasteryBonus(masteryLevel);
-  const focusBonus = useFocus ? 15.3 : 0; // Approximate focus bonus
-  return baseReturnRate + masteryBonus + focusBonus;
+  return baseReturnRate + masteryBonus;
 };
 
 // Material names by tier
@@ -121,12 +123,12 @@ export const MATERIAL_NAMES = {
 export const REFINED_NAMES = {
   ore: {
     2: "Copper Bar",
-    3: "Bronze Bar",
-    4: "Steel Bar",
-    5: "Titanium Steel Bar",
-    6: "Adamantium Steel Bar",
-    7: "Meteorite Steel Bar",
-    8: "Orichalcum Steel Bar",
+    3: "Tin Bar",
+    4: "Iron Bar",
+    5: "Titanium Bar",
+    6: "Adamantium Bar",
+    7: "Meteorite Bar",
+    8: "Orichalcum Bar",
   },
   hide: {
     2: "Stiff Leather",

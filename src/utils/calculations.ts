@@ -48,6 +48,8 @@ export interface RefiningResult {
   netProfit: number;
   profitPerUnit: number;
   profitPerFocus: number;
+  profitMargin: number;
+  returnedMaterialsValue: number;
 
   // Efficiency metrics
   canCraftAll: boolean;
@@ -148,6 +150,10 @@ export const calculateRefiningProfit = (
   const profitPerUnit = netProfit / targetQuantity;
   const profitPerFocus =
     useFocus && focusCost > 0 ? netProfit / (focusCost / focusCostPerCraft) : 0;
+  const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
+  const returnedMaterialsValue = 
+    rawMaterialsReturned * rawMaterialPrice + 
+    lowerTierRefinedReturned * lowerTierRefinedPrice;
 
   return {
     rawMaterialsNeeded,
@@ -171,6 +177,8 @@ export const calculateRefiningProfit = (
     netProfit,
     profitPerUnit,
     profitPerFocus,
+    profitMargin,
+    returnedMaterialsValue,
 
     canCraftAll,
     missingRawMaterials,

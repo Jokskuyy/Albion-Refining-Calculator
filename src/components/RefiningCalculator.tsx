@@ -28,8 +28,6 @@ import {
   type ResourceBasedInput,
   type ResourceBasedResult,
 } from "../utils/resourceCalculations";
-import { PriceFetcher } from "./PriceFetcher";
-import type { MaterialPrices } from "../services/priceService";
 
 interface ToggleSwitchProps {
   checked: boolean;
@@ -76,27 +74,12 @@ export const RefiningCalculator: React.FC = () => {
     useState<number>(200);
   const [isBonusCity, setIsBonusCity] = useState<boolean>(true);
   const [isRefiningDay, setIsRefiningDay] = useState<boolean>(false);
-  const [masteryLevel, setMasteryLevel] = useState<number>(100);
   const [useFocus, setUseFocus] = useState<boolean>(false);
-  const [stationFeePercent, setStationFeePercent] = useState<number>(5);
   const [marketTaxPercent, setMarketTaxPercent] = useState<number>(4);
-  const [isPremium, setIsPremium] = useState<boolean>(false);
-  const [availableRawMaterials, setAvailableRawMaterials] =
-    useState<number>(1000);
-  const [availableLowerTierRefined, setAvailableLowerTierRefined] =
-    useState<number>(1000);
 
   const [result, setResult] = useState<RefiningResult | null>(null);
   const [resourceResult, setResourceResult] =
     useState<ResourceBasedResult | null>(null);
-
-  const handlePricesUpdated = (prices: MaterialPrices) => {
-    setRawMaterialPrice(prices.rawMaterialPrice);
-    setRefinedMaterialPrice(prices.refinedMaterialPrice);
-    if (tier > 2) {
-      setLowerTierRefinedPrice(prices.lowerTierRefinedPrice);
-    }
-  };
 
   const calculateResult = () => {
     if (calculationMode === "target") {
@@ -112,13 +95,13 @@ export const RefiningCalculator: React.FC = () => {
             ? RETURN_RATES.bonusCityWithRefiningDay
             : RETURN_RATES.bonusCity
           : RETURN_RATES.nonBonusCity,
-        masteryLevel,
+        masteryLevel: 0,
         useFocus,
-        stationFeePercent,
+        stationFeePercent: 0,
         marketTaxPercent,
-        isPremium,
-        availableRawMaterials,
-        availableLowerTierRefined,
+        isPremium: false,
+        availableRawMaterials: 0,
+        availableLowerTierRefined: 0,
       };
 
       const calculatedResult = calculateRefiningProfit(input);
@@ -138,11 +121,11 @@ export const RefiningCalculator: React.FC = () => {
             ? RETURN_RATES.bonusCityWithRefiningDay
             : RETURN_RATES.bonusCity
           : RETURN_RATES.nonBonusCity,
-        masteryLevel,
+        masteryLevel: 0,
         useFocus,
-        stationFeePercent,
+        stationFeePercent: 0,
         marketTaxPercent,
-        isPremium,
+        isPremium: false,
       };
 
       const calculatedResult = calculateResourceBasedRefining(input);
@@ -165,13 +148,8 @@ export const RefiningCalculator: React.FC = () => {
     lowerTierRefinedPrice,
     isBonusCity,
     isRefiningDay,
-    masteryLevel,
     useFocus,
-    stationFeePercent,
     marketTaxPercent,
-    isPremium,
-    availableRawMaterials,
-    availableLowerTierRefined,
   ]);
 
   const rawMaterialName = MATERIAL_NAMES[materialType][tier];
@@ -335,20 +313,6 @@ export const RefiningCalculator: React.FC = () => {
                     )}
                   </>
                 )}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Mastery Level
-                  </label>
-                  <input
-                    type="number"
-                    value={masteryLevel}
-                    onChange={(e) => setMasteryLevel(Number(e.target.value))}
-                    className="input-field"
-                    min="0"
-                    max="120"
-                  />
-                </div>
               </div>
             </div>
 
@@ -409,55 +373,6 @@ export const RefiningCalculator: React.FC = () => {
               </div>
             </div>
 
-            {/* Price Fetcher */}
-            <PriceFetcher
-              materialType={materialType}
-              tier={tier}
-              onPricesUpdated={handlePricesUpdated}
-            />
-
-            {/* Available Materials */}
-            <div className="card p-6 animate-slide-up">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-blue-500" />
-                Available Materials
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Available {rawMaterialName}
-                  </label>
-                  <input
-                    type="number"
-                    value={availableRawMaterials}
-                    onChange={(e) =>
-                      setAvailableRawMaterials(Number(e.target.value))
-                    }
-                    className="input-field"
-                    min="0"
-                  />
-                </div>
-
-                {tier > 2 && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Available {lowerTierRefinedName}
-                    </label>
-                    <input
-                      type="number"
-                      value={availableLowerTierRefined}
-                      onChange={(e) =>
-                        setAvailableLowerTierRefined(Number(e.target.value))
-                      }
-                      className="input-field"
-                      min="0"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* Settings */}
             <div className="card p-6 animate-slide-up">
               <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
@@ -480,37 +395,14 @@ export const RefiningCalculator: React.FC = () => {
                       label={`Refining Day (+10% bonus = ${RETURN_RATES.bonusCityWithRefiningDay}%)`}
                     />
                   )}
-
-                  <ToggleSwitch
-                    checked={useFocus}
-                    onChange={setUseFocus}
-                    label="Use Focus (+15.3% return rate)"
-                  />
-
-                  <ToggleSwitch
-                    checked={isPremium}
-                    onChange={setIsPremium}
-                    label="Premium Account (50% less fees)"
-                  />
                 </div>
 
                 <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Station Fee (%)
-                    </label>
-                    <input
-                      type="number"
-                      value={stationFeePercent}
-                      onChange={(e) =>
-                        setStationFeePercent(Number(e.target.value))
-                      }
-                      className="input-field"
-                      min="0"
-                      max="50"
-                      step="0.1"
-                    />
-                  </div>
+                  <ToggleSwitch
+                    checked={useFocus}
+                    onChange={setUseFocus}
+                    label="Use Focus (53.9% return rate)"
+                  />
 
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -623,7 +515,7 @@ export const RefiningCalculator: React.FC = () => {
 
                       <div className="space-y-3 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Raw materials:</span>
+                          <span className="text-gray-400">{rawMaterialName}:</span>
                           <span className="font-medium">
                             {result.rawMaterialCost.toLocaleString()} 🪙
                           </span>
@@ -632,20 +524,13 @@ export const RefiningCalculator: React.FC = () => {
                         {tier > 2 && (
                           <div className="flex justify-between">
                             <span className="text-gray-400">
-                              Lower tier refined:
+                              {lowerTierRefinedName}:
                             </span>
                             <span className="font-medium">
                               {result.lowerTierRefinedCost.toLocaleString()} 🪙
                             </span>
                           </div>
                         )}
-
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Station fee:</span>
-                          <span className="font-medium">
-                            {result.stationFee.toLocaleString()} 🪙
-                          </span>
-                        </div>
 
                         <div className="flex justify-between">
                           <span className="text-gray-400">Market tax:</span>
@@ -695,6 +580,15 @@ export const RefiningCalculator: React.FC = () => {
                         </div>
 
                         <div className="flex justify-between">
+                          <span className="text-gray-400">
+                            Materials returned value:
+                          </span>
+                          <span className="font-medium text-blue-400">
+                            {result.returnedMaterialsValue.toLocaleString()} 🪙
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
                           <span className="text-gray-400">Gross profit:</span>
                           <span
                             className={`font-medium ${
@@ -736,6 +630,21 @@ export const RefiningCalculator: React.FC = () => {
                             }`}
                           >
                             {result.profitPerUnit.toFixed(0)} 🪙
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">
+                            Profit margin:
+                          </span>
+                          <span
+                            className={`font-medium ${
+                              result.profitMargin >= 0
+                                ? "text-green-400"
+                                : "text-red-400"
+                            }`}
+                          >
+                            {result.profitMargin.toFixed(1)}%
                           </span>
                         </div>
 
@@ -810,6 +719,13 @@ export const RefiningCalculator: React.FC = () => {
                               {resourceResult.refinementsMade.toLocaleString()}
                             </span>
                           </div>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Iterations:</span>
+                          <span className="font-medium text-blue-400">
+                            {resourceResult.iterations}
+                          </span>
                         </div>
 
                         <div className="flex justify-between">
@@ -893,16 +809,51 @@ export const RefiningCalculator: React.FC = () => {
                         </div>
 
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Material costs:</span>
+                          <span className="text-gray-400">{rawMaterialName}:</span>
                           <span className="font-medium text-red-400">
-                            {resourceResult.materialCosts.toLocaleString()} 🪙
+                            {resourceResult.rawMaterialCost.toLocaleString()} 🪙
                           </span>
                         </div>
 
+                        {tier > 2 && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">
+                              {lowerTierRefinedName}:
+                            </span>
+                            <span className="font-medium text-red-400">
+                              {resourceResult.lowerTierRefinedCost.toLocaleString()} 🪙
+                            </span>
+                          </div>
+                        )}
+
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Station fee:</span>
-                          <span className="font-medium">
-                            {resourceResult.stationFee.toLocaleString()} 🪙
+                          <span className="text-gray-400">
+                            Materials returned value:
+                          </span>
+                          <span className="font-medium text-blue-400">
+                            {resourceResult.returnedMaterialsValue.toLocaleString()} 🪙
+                          </span>
+                        </div>
+
+                        <div className="border-t border-dark-600 pt-2">
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Total revenue:</span>
+                            <span className="font-medium text-green-400">
+                              {resourceResult.totalRevenue.toLocaleString()} 🪙
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">Gross profit:</span>
+                          <span
+                            className={`font-medium ${
+                              resourceResult.grossProfit >= 0
+                                ? "text-green-400"
+                                : "text-red-400"
+                            }`}
+                          >
+                            {resourceResult.grossProfit.toLocaleString()} 🪙
                           </span>
                         </div>
 
@@ -921,6 +872,36 @@ export const RefiningCalculator: React.FC = () => {
                               {resourceResult.netProfit.toLocaleString()} 🪙
                             </span>
                           </div>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">
+                            Profit per unit:
+                          </span>
+                          <span
+                            className={`font-medium ${
+                              resourceResult.profitPerUnit >= 0
+                                ? "text-green-400"
+                                : "text-red-400"
+                            }`}
+                          >
+                            {resourceResult.profitPerUnit.toFixed(0)} 🪙
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-gray-400">
+                            Profit margin:
+                          </span>
+                          <span
+                            className={`font-medium ${
+                              resourceResult.profitMargin >= 0
+                                ? "text-green-400"
+                                : "text-red-400"
+                            }`}
+                          >
+                            {resourceResult.profitMargin.toFixed(1)}%
+                          </span>
                         </div>
 
                         {useFocus && resourceResult.focusUsed > 0 && (
