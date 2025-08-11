@@ -9,6 +9,15 @@ import {
   Focus,
   Archive,
   Package,
+  Sun,
+  Moon,
+  Sparkles,
+  Crown,
+  Coins,
+  BarChart3,
+  Activity,
+  Target,
+  Layers,
 } from "lucide-react";
 import type { MaterialType, Tier } from "../constants/gameData";
 import {
@@ -41,7 +50,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   label,
 }) => (
   <div className="flex items-center justify-between">
-    <span className="text-sm font-medium text-gray-300">{label}</span>
+    <span className="text-sm font-medium text-secondary">{label}</span>
     <button
       type="button"
       className={`toggle-switch ${checked ? "toggle-switch-active" : ""}`}
@@ -76,10 +85,51 @@ export const RefiningCalculator: React.FC = () => {
   const [isRefiningDay, setIsRefiningDay] = useState<boolean>(false);
   const [useFocus, setUseFocus] = useState<boolean>(false);
   const [marketTaxPercent, setMarketTaxPercent] = useState<number>(4);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
   const [result, setResult] = useState<RefiningResult | null>(null);
   const [resourceResult, setResourceResult] =
     useState<ResourceBasedResult | null>(null);
+
+  // Update document theme attribute
+  useEffect(() => {
+    document.documentElement.setAttribute(
+      "data-theme",
+      isDarkMode ? "dark" : "light"
+    );
+  }, [isDarkMode]);
+
+  // Handler untuk toggle Use Focus dengan logic auto-off untuk bonus city dan refining day
+  const handleUseFocusToggle = (value: boolean) => {
+    setUseFocus(value);
+    if (value) {
+      // Jika Use Focus dinyalakan, matikan Bonus City dan Refining Day
+      setIsBonusCity(false);
+      setIsRefiningDay(false);
+    }
+  };
+
+  // Handler untuk toggle Bonus City dengan logic auto-off untuk Use Focus
+  const handleBonusCityToggle = (value: boolean) => {
+    setIsBonusCity(value);
+    if (value) {
+      // Jika Bonus City dinyalakan, matikan Use Focus
+      setUseFocus(false);
+    }
+    if (!value) {
+      // Jika Bonus City dimatikan, matikan juga Refining Day
+      setIsRefiningDay(false);
+    }
+  };
+
+  // Handler untuk toggle Refining Day dengan logic auto-off untuk Use Focus
+  const handleRefiningDayToggle = (value: boolean) => {
+    setIsRefiningDay(value);
+    if (value) {
+      // Jika Refining Day dinyalakan, matikan Use Focus
+      setUseFocus(false);
+    }
+  };
 
   const calculateResult = () => {
     if (calculationMode === "target") {
@@ -157,18 +207,121 @@ export const RefiningCalculator: React.FC = () => {
   const lowerTierRefinedName =
     tier > 2 ? REFINED_NAMES[materialType][(tier - 1) as Tier] : "";
 
+  // Theme configuration
+  const themeConfig = {
+    dark: {
+      bg: "bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950",
+      cardBg: "bg-slate-800/80 backdrop-blur-sm border-slate-700/60",
+      text: "text-gray-100",
+      textSecondary: "text-gray-300",
+      textMuted: "text-gray-400",
+      accent: "from-blue-500 to-purple-600",
+      accentHover: "from-blue-600 to-purple-700",
+      inputBg: "bg-slate-700/80 border-slate-600",
+      inputFocus: "focus:ring-blue-500/50 focus:border-blue-500",
+    },
+    light: {
+      bg: "bg-gradient-to-br from-blue-50 via-white to-indigo-50",
+      cardBg: "bg-white/90 backdrop-blur-sm border-gray-200/60 shadow-lg",
+      text: "text-gray-900",
+      textSecondary: "text-gray-700",
+      textMuted: "text-gray-500",
+      accent: "from-blue-600 to-purple-700",
+      accentHover: "from-blue-700 to-purple-800",
+      inputBg: "bg-gray-50 border-gray-300",
+      inputFocus: "focus:ring-blue-500/50 focus:border-blue-500",
+    },
+  };
+
+  // Reusable classes
+  const cardClass = `${
+    isDarkMode ? themeConfig.dark.cardBg : themeConfig.light.cardBg
+  } border ${
+    isDarkMode ? "border-slate-700" : "border-gray-200"
+  } rounded-lg shadow-lg p-6`;
+
+  const inputClass = `w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+    isDarkMode
+      ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+  }`;
+
+  const labelClass = `block text-sm font-medium mb-2 ${
+    isDarkMode ? "text-gray-300" : "text-gray-700"
+  }`;
+
+  const theme = isDarkMode ? themeConfig.dark : themeConfig.light;
+
   return (
-    <div className="min-h-screen bg-slate-900 text-gray-100 p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
+    <div
+      className={`min-h-screen ${theme.bg} ${theme.text} p-4 transition-all duration-500`}
+      data-theme={isDarkMode ? "dark" : "light"}
+    >
+      {/* Floating decorative elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute bottom-20 left-1/2 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
+      </div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
+        {/* Enhanced Header with Theme Toggle */}
         <div className="text-center mb-8 animate-fade-in">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <Calculator className="w-8 h-8 text-blue-500" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Albion Refining Calculator
-            </h1>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div
+                className={`p-3 rounded-xl bg-gradient-to-r ${theme.accent} shadow-lg`}
+              >
+                <Calculator className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1
+                  className={`text-4xl font-bold bg-gradient-to-r ${theme.accent} bg-clip-text text-transparent`}
+                >
+                  Albion Refining Calculator
+                </h1>
+                <div className="flex items-center gap-2 mt-1">
+                  <Crown className="w-4 h-4 text-yellow-500" />
+                  <span className={`text-sm ${theme.textMuted} font-medium`}>
+                    Premium Analytics Suite
+                  </span>
+                  <Sparkles className="w-4 h-4 text-purple-500" />
+                </div>
+              </div>
+            </div>
+
+            {/* Theme Toggle */}
+            <div className="flex items-center gap-3">
+              <span className={`text-sm ${theme.textMuted}`}>
+                {isDarkMode ? "Dark" : "Light"}
+              </span>
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className={`relative w-14 h-7 ${theme.cardBg} rounded-full border transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500/50`}
+              >
+                <div
+                  className={`absolute top-0.5 left-0.5 w-6 h-6 bg-gradient-to-r ${
+                    theme.accent
+                  } rounded-full shadow-lg transform transition-transform duration-300 flex items-center justify-center ${
+                    isDarkMode ? "translate-x-7" : "translate-x-0"
+                  }`}
+                >
+                  {isDarkMode ? (
+                    <Moon className="w-3 h-3 text-white" />
+                  ) : (
+                    <Sun className="w-3 h-3 text-white" />
+                  )}
+                </div>
+              </button>
+            </div>
           </div>
-          <p className="text-gray-400 text-lg">
+          <p
+            className={`text-lg ${
+              isDarkMode
+                ? themeConfig.dark.textSecondary
+                : themeConfig.light.textSecondary
+            }`}
+          >
             Calculate refining costs, profits, and material requirements with
             Albion Online mechanics
           </p>
@@ -178,9 +331,25 @@ export const RefiningCalculator: React.FC = () => {
           {/* Input Panel */}
           <div className="lg:col-span-2 space-y-6">
             {/* Calculation Mode Selection */}
-            <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg p-6 animate-slide-up">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <Calculator className="w-5 h-5 text-blue-500" />
+            <div
+              className={`${
+                isDarkMode ? themeConfig.dark.cardBg : themeConfig.light.cardBg
+              } border ${
+                isDarkMode ? "border-slate-700" : "border-gray-200"
+              } rounded-lg shadow-lg p-6 animate-slide-up`}
+            >
+              <h2
+                className={`text-xl font-bold mb-4 flex items-center gap-2 ${
+                  isDarkMode ? themeConfig.dark.text : themeConfig.light.text
+                }`}
+              >
+                <Calculator
+                  className={`w-5 h-5 ${
+                    isDarkMode
+                      ? themeConfig.dark.accent
+                      : themeConfig.light.accent
+                  }`}
+                />
                 Calculation Mode
               </h2>
 
@@ -189,13 +358,25 @@ export const RefiningCalculator: React.FC = () => {
                   onClick={() => setCalculationMode("target")}
                   className={`p-4 rounded-lg border-2 transition-all duration-200 ${
                     calculationMode === "target"
-                      ? "border-blue-500 bg-blue-500/20 text-blue-400"
-                      : "border-slate-600 hover:border-slate-500"
+                      ? `border-blue-500 ${
+                          isDarkMode
+                            ? "bg-blue-500/20 text-blue-400"
+                            : "bg-blue-50 text-blue-600"
+                        }`
+                      : `${
+                          isDarkMode
+                            ? "border-slate-600 hover:border-slate-500 text-slate-300"
+                            : "border-gray-300 hover:border-gray-400 text-gray-700"
+                        }`
                   }`}
                 >
                   <div className="text-left">
                     <div className="font-medium">Target Based</div>
-                    <div className="text-sm text-gray-400 mt-1">
+                    <div
+                      className={`text-sm mt-1 ${
+                        isDarkMode ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       Calculate materials needed for specific quantity
                     </div>
                   </div>
@@ -205,13 +386,25 @@ export const RefiningCalculator: React.FC = () => {
                   onClick={() => setCalculationMode("resources")}
                   className={`p-4 rounded-lg border-2 transition-all duration-200 ${
                     calculationMode === "resources"
-                      ? "border-blue-500 bg-blue-500/20 text-blue-400"
-                      : "border-slate-600 hover:border-slate-500"
+                      ? `border-blue-500 ${
+                          isDarkMode
+                            ? "bg-blue-500/20 text-blue-400"
+                            : "bg-blue-50 text-blue-600"
+                        }`
+                      : `${
+                          isDarkMode
+                            ? "border-slate-600 hover:border-slate-500 text-slate-300"
+                            : "border-gray-300 hover:border-gray-400 text-gray-700"
+                        }`
                   }`}
                 >
                   <div className="text-left">
                     <div className="font-medium">Resource Based</div>
-                    <div className="text-sm text-gray-400 mt-1">
+                    <div
+                      className={`text-sm mt-1 ${
+                        isDarkMode ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
                       Calculate output from owned materials
                     </div>
                   </div>
@@ -220,15 +413,35 @@ export const RefiningCalculator: React.FC = () => {
             </div>
 
             {/* Material Selection */}
-            <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg p-6 animate-slide-up">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <Settings className="w-5 h-5 text-blue-500" />
+            <div
+              className={`${
+                isDarkMode ? themeConfig.dark.cardBg : themeConfig.light.cardBg
+              } border ${
+                isDarkMode ? "border-slate-700" : "border-gray-200"
+              } rounded-lg shadow-lg p-6 animate-slide-up`}
+            >
+              <h2
+                className={`text-xl font-bold mb-4 flex items-center gap-2 ${
+                  isDarkMode ? themeConfig.dark.text : themeConfig.light.text
+                }`}
+              >
+                <Settings
+                  className={`w-5 h-5 ${
+                    isDarkMode
+                      ? themeConfig.dark.accent
+                      : themeConfig.light.accent
+                  }`}
+                />
                 Material Configuration
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    className={`block text-sm font-medium mb-2 ${
+                      isDarkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
                     Material Type
                   </label>
                   <select
@@ -236,7 +449,11 @@ export const RefiningCalculator: React.FC = () => {
                     onChange={(e) =>
                       setMaterialType(e.target.value as MaterialType)
                     }
-                    className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      isDarkMode
+                        ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                    }`}
                   >
                     {Object.entries(MATERIAL_TYPES).map(([key, material]) => (
                       <option key={key} value={key}>
@@ -247,13 +464,21 @@ export const RefiningCalculator: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    className={`block text-sm font-medium mb-2 ${
+                      isDarkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
                     Tier
                   </label>
                   <select
                     value={tier}
                     onChange={(e) => setTier(Number(e.target.value) as Tier)}
-                    className="input-field"
+                    className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      isDarkMode
+                        ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                    }`}
                   >
                     {Object.keys(TIER_REQUIREMENTS).map((t) => (
                       <option key={t} value={t}>
@@ -265,7 +490,11 @@ export const RefiningCalculator: React.FC = () => {
 
                 {calculationMode === "target" ? (
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       Target Quantity
                     </label>
                     <input
@@ -274,14 +503,22 @@ export const RefiningCalculator: React.FC = () => {
                       onChange={(e) =>
                         setTargetQuantity(Number(e.target.value))
                       }
-                      className="input-field"
+                      className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      }`}
                       min="1"
                     />
                   </div>
                 ) : (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label
+                        className={`block text-sm font-medium mb-2 ${
+                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                        }`}
+                      >
                         Owned {rawMaterialName}
                       </label>
                       <input
@@ -290,14 +527,22 @@ export const RefiningCalculator: React.FC = () => {
                         onChange={(e) =>
                           setOwnedRawMaterials(Number(e.target.value))
                         }
-                        className="input-field"
+                        className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          isDarkMode
+                            ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                            : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                        }`}
                         min="0"
                       />
                     </div>
 
                     {tier > 2 && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-300 mb-2">
+                        <label
+                          className={`block text-sm font-medium mb-2 ${
+                            isDarkMode ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
                           Owned {lowerTierRefinedName}
                         </label>
                         <input
@@ -306,7 +551,11 @@ export const RefiningCalculator: React.FC = () => {
                           onChange={(e) =>
                             setOwnedLowerTierRefined(Number(e.target.value))
                           }
-                          className="input-field"
+                          className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                            isDarkMode
+                              ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                              : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                          }`}
                           min="0"
                         />
                       </div>
@@ -317,15 +566,35 @@ export const RefiningCalculator: React.FC = () => {
             </div>
 
             {/* Price Configuration */}
-            <div className="card p-6 animate-slide-up">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-blue-500" />
+            <div
+              className={`${
+                isDarkMode ? themeConfig.dark.cardBg : themeConfig.light.cardBg
+              } border ${
+                isDarkMode ? "border-slate-700" : "border-gray-200"
+              } rounded-lg shadow-lg p-6 animate-slide-up`}
+            >
+              <h2
+                className={`text-xl font-bold mb-4 flex items-center gap-2 ${
+                  isDarkMode ? themeConfig.dark.text : themeConfig.light.text
+                }`}
+              >
+                <TrendingUp
+                  className={`w-5 h-5 ${
+                    isDarkMode
+                      ? themeConfig.dark.accent
+                      : themeConfig.light.accent
+                  }`}
+                />
                 Price Configuration (Silver)
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    className={`block text-sm font-medium mb-2 ${
+                      isDarkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
                     {rawMaterialName} Price
                   </label>
                   <input
@@ -334,13 +603,21 @@ export const RefiningCalculator: React.FC = () => {
                     onChange={(e) =>
                       setRawMaterialPrice(Number(e.target.value))
                     }
-                    className="input-field"
+                    className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      isDarkMode
+                        ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                    }`}
                     min="0"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label
+                    className={`block text-sm font-medium mb-2 ${
+                      isDarkMode ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
                     {refinedMaterialName} Price
                   </label>
                   <input
@@ -349,14 +626,22 @@ export const RefiningCalculator: React.FC = () => {
                     onChange={(e) =>
                       setRefinedMaterialPrice(Number(e.target.value))
                     }
-                    className="input-field"
+                    className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      isDarkMode
+                        ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                    }`}
                     min="0"
                   />
                 </div>
 
                 {tier > 2 && (
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
                       {lowerTierRefinedName} Price
                     </label>
                     <input
@@ -374,9 +659,19 @@ export const RefiningCalculator: React.FC = () => {
             </div>
 
             {/* Settings */}
-            <div className="card p-6 animate-slide-up">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <Settings className="w-5 h-5 text-blue-500" />
+            <div className={`${cardClass} animate-slide-up`}>
+              <h2
+                className={`text-xl font-bold mb-4 flex items-center gap-2 ${
+                  isDarkMode ? themeConfig.dark.text : themeConfig.light.text
+                }`}
+              >
+                <Settings
+                  className={`w-5 h-5 ${
+                    isDarkMode
+                      ? themeConfig.dark.accent
+                      : themeConfig.light.accent
+                  }`}
+                />
                 Refining Settings
               </h2>
 
@@ -384,14 +679,14 @@ export const RefiningCalculator: React.FC = () => {
                 <div className="space-y-4">
                   <ToggleSwitch
                     checked={isBonusCity}
-                    onChange={setIsBonusCity}
+                    onChange={handleBonusCityToggle}
                     label={`Bonus City (${RETURN_RATES.bonusCity}% return rate)`}
                   />
 
                   {isBonusCity && (
                     <ToggleSwitch
                       checked={isRefiningDay}
-                      onChange={setIsRefiningDay}
+                      onChange={handleRefiningDayToggle}
                       label={`Refining Day (+10% bonus = ${RETURN_RATES.bonusCityWithRefiningDay}%)`}
                     />
                   )}
@@ -400,7 +695,7 @@ export const RefiningCalculator: React.FC = () => {
                 <div className="space-y-4">
                   <ToggleSwitch
                     checked={useFocus}
-                    onChange={setUseFocus}
+                    onChange={handleUseFocusToggle}
                     label="Use Focus (53.9% return rate)"
                   />
                 </div>
@@ -415,15 +710,45 @@ export const RefiningCalculator: React.FC = () => {
                 {calculationMode === "target" && result && (
                   <>
                     {/* Under Construction Notice */}
-                    <div className="card p-6 animate-scale-in">
-                      <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-4">
+                    <div
+                      className={`${
+                        isDarkMode
+                          ? themeConfig.dark.cardBg
+                          : themeConfig.light.cardBg
+                      } border ${
+                        isDarkMode ? "border-slate-700" : "border-gray-200"
+                      } rounded-lg shadow-lg p-6 animate-scale-in`}
+                    >
+                      <div
+                        className={`border rounded-lg p-4 ${
+                          isDarkMode
+                            ? "bg-yellow-900/20 border-yellow-700"
+                            : "bg-yellow-50 border-yellow-300"
+                        }`}
+                      >
                         <div className="flex items-center gap-3">
-                          <Settings className="w-5 h-5 text-yellow-400" />
+                          <Settings
+                            className={`w-5 h-5 ${
+                              isDarkMode ? "text-yellow-400" : "text-yellow-600"
+                            }`}
+                          />
                           <div>
-                            <div className="text-yellow-400 font-medium">
+                            <div
+                              className={`font-medium ${
+                                isDarkMode
+                                  ? "text-yellow-400"
+                                  : "text-yellow-800"
+                              }`}
+                            >
                               Target Mode - Under Construction
                             </div>
-                            <div className="text-yellow-300/80 text-sm mt-1">
+                            <div
+                              className={`text-sm mt-1 ${
+                                isDarkMode
+                                  ? "text-yellow-300/80"
+                                  : "text-yellow-700"
+                              }`}
+                            >
                               This mode is currently being refined. Some
                               features may not work correctly.
                             </div>
@@ -433,72 +758,94 @@ export const RefiningCalculator: React.FC = () => {
                     </div>
 
                     {/* Material Requirements */}
-                    <div className="card p-6 animate-scale-in">
-                      <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                        <Calculator className="w-5 h-5 text-blue-500" />
+                    <div className={`${cardClass} animate-scale-in`}>
+                      <h3
+                        className={`text-lg font-bold mb-4 flex items-center gap-2 ${
+                          isDarkMode
+                            ? themeConfig.dark.text
+                            : themeConfig.light.text
+                        }`}
+                      >
+                        <Calculator
+                          className={`w-5 h-5 ${
+                            isDarkMode
+                              ? themeConfig.dark.accent
+                              : themeConfig.light.accent
+                          }`}
+                        />
                         Material Requirements
                       </h3>
 
                       <div className="space-y-3 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-400">
+                          <span className="text-secondary">
                             {rawMaterialName} needed:
                           </span>
-                          <span className="font-medium">
+                          <span className="font-medium text-primary">
                             {result.rawMaterialsNeeded.toLocaleString()}
                           </span>
                         </div>
 
                         {tier > 2 && (
                           <div className="flex justify-between">
-                            <span className="text-gray-400">
+                            <span className="text-secondary">
                               {lowerTierRefinedName} needed:
                             </span>
-                            <span className="font-medium">
+                            <span className="font-medium text-primary">
                               {result.lowerTierRefinedNeeded.toLocaleString()}
                             </span>
                           </div>
                         )}
 
-                        <div className="border-t border-dark-600 pt-2">
+                        <div
+                          className={`border-t pt-2 ${
+                            isDarkMode ? "border-slate-600" : "border-gray-200"
+                          }`}
+                        >
                           <div className="flex justify-between">
-                            <span className="text-gray-400">
+                            <span className="text-secondary">
                               Expected output:
                             </span>
-                            <span className="font-medium text-primary-400">
+                            <span className="font-medium text-primary">
                               {result.expectedOutput.toLocaleString()}
                             </span>
                           </div>
                         </div>
 
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Return rate:</span>
-                          <span className="font-medium text-green-400">
+                          <span className="text-secondary">Return rate:</span>
+                          <span className="font-medium status-profitable">
                             {result.effectiveReturnRate.toFixed(1)}%
                           </span>
                         </div>
 
                         {!result.canCraftAll && (
-                          <div className="bg-red-900/20 border border-red-700 rounded-lg p-3 mt-3">
-                            <div className="flex items-center gap-2 text-red-400 text-xs font-medium mb-1">
+                          <div
+                            className={`rounded-lg p-3 mt-3 ${
+                              isDarkMode
+                                ? "bg-red-900/20 border border-red-700"
+                                : "bg-red-50 border border-red-200"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 status-unprofitable text-xs font-medium mb-1">
                               <AlertCircle className="w-4 h-4" />
                               Insufficient Materials
                             </div>
                             {result.missingRawMaterials > 0 && (
-                              <div className="text-xs text-red-300">
+                              <div className="text-xs status-unprofitable">
                                 Missing{" "}
                                 {result.missingRawMaterials.toLocaleString()}{" "}
                                 {rawMaterialName}
                               </div>
                             )}
                             {result.missingLowerTierRefined > 0 && (
-                              <div className="text-xs text-red-300">
+                              <div className="text-xs status-unprofitable">
                                 Missing{" "}
                                 {result.missingLowerTierRefined.toLocaleString()}{" "}
                                 {lowerTierRefinedName}
                               </div>
                             )}
-                            <div className="text-xs text-gray-400 mt-1">
+                            <div className="text-xs text-muted mt-1">
                               Max possible crafts:{" "}
                               {result.maxPossibleCrafts.toLocaleString()}
                             </div>
@@ -516,20 +863,20 @@ export const RefiningCalculator: React.FC = () => {
 
                       <div className="space-y-3 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-400">
+                          <span className="text-secondary">
                             {rawMaterialName}:
                           </span>
-                          <span className="font-medium">
+                          <span className="font-medium text-primary">
                             {result.rawMaterialCost.toLocaleString()} 🪙
                           </span>
                         </div>
 
                         {tier > 2 && (
                           <div className="flex justify-between">
-                            <span className="text-gray-400">
+                            <span className="text-secondary">
                               {lowerTierRefinedName}:
                             </span>
-                            <span className="font-medium">
+                            <span className="font-medium text-primary">
                               {result.lowerTierRefinedCost.toLocaleString()} 🪙
                             </span>
                           </div>
@@ -537,22 +884,26 @@ export const RefiningCalculator: React.FC = () => {
 
                         {useFocus && (
                           <div className="flex justify-between">
-                            <span className="text-gray-400 flex items-center gap-1">
+                            <span className="text-secondary flex items-center gap-1">
                               <Focus className="w-3 h-3" />
                               Focus cost:
                             </span>
-                            <span className="font-medium">
+                            <span className="font-medium text-primary">
                               {result.focusCost.toLocaleString()} ⚡
                             </span>
                           </div>
                         )}
 
-                        <div className="border-t border-dark-600 pt-2">
+                        <div
+                          className={`border-t pt-2 ${
+                            isDarkMode ? "border-slate-600" : "border-gray-200"
+                          }`}
+                        >
                           <div className="flex justify-between">
-                            <span className="text-gray-400 font-medium">
+                            <span className="text-secondary font-medium">
                               Total cost:
                             </span>
-                            <span className="font-bold text-red-400">
+                            <span className="font-bold status-unprofitable">
                               {result.totalCost.toLocaleString()} 🪙
                             </span>
                           </div>
@@ -569,7 +920,7 @@ export const RefiningCalculator: React.FC = () => {
 
                       <div className="space-y-3 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Total revenue:</span>
+                          <span className="text-secondary">Total revenue:</span>
                           <span className="font-medium text-green-400">
                             {result.totalRevenue.toLocaleString()} 🪙
                           </span>
@@ -656,14 +1007,26 @@ export const RefiningCalculator: React.FC = () => {
                       </div>
 
                       {result.netProfit >= 0 ? (
-                        <div className="bg-green-900/20 border border-green-700 rounded-lg p-3 mt-4">
-                          <div className="text-green-400 text-xs font-medium">
+                        <div
+                          className={`rounded-lg p-3 mt-4 ${
+                            isDarkMode
+                              ? "bg-green-900/20 border border-green-700"
+                              : "bg-green-50 border border-green-200"
+                          }`}
+                        >
+                          <div className="status-profitable text-xs font-medium">
                             ✅ Profitable refining operation
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-red-900/20 border border-red-700 rounded-lg p-3 mt-4">
-                          <div className="text-red-400 text-xs font-medium">
+                        <div
+                          className={`rounded-lg p-3 mt-4 ${
+                            isDarkMode
+                              ? "bg-red-900/20 border border-red-700"
+                              : "bg-red-50 border border-red-200"
+                          }`}
+                        >
+                          <div className="status-unprofitable text-xs font-medium">
                             ❌ Loss-making operation
                           </div>
                         </div>
@@ -904,14 +1267,26 @@ export const RefiningCalculator: React.FC = () => {
                       </div>
 
                       {resourceResult.netProfit >= 0 ? (
-                        <div className="bg-green-900/20 border border-green-700 rounded-lg p-3 mt-4">
-                          <div className="text-green-400 text-xs font-medium">
+                        <div
+                          className={`rounded-lg p-3 mt-4 ${
+                            isDarkMode
+                              ? "bg-green-900/20 border border-green-700"
+                              : "bg-green-50 border border-green-200"
+                          }`}
+                        >
+                          <div className="status-profitable text-xs font-medium">
                             ✅ Profitable refining from owned resources
                           </div>
                         </div>
                       ) : (
-                        <div className="bg-red-900/20 border border-red-700 rounded-lg p-3 mt-4">
-                          <div className="text-red-400 text-xs font-medium">
+                        <div
+                          className={`rounded-lg p-3 mt-4 ${
+                            isDarkMode
+                              ? "bg-red-900/20 border border-red-700"
+                              : "bg-red-50 border border-red-200"
+                          }`}
+                        >
+                          <div className="status-unprofitable text-xs font-medium">
                             ❌ Loss compared to selling raw materials
                           </div>
                         </div>

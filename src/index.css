@@ -1,48 +1,91 @@
 @import "tailwindcss";
 
+/* CSS Custom Properties for Theme System */
+:root {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #475569;
+  --text-success: #059669;
+  --text-danger: #dc2626;
+  --text-warning: #d97706;
+  --text-info: #0284c7;
+  --border-color: #e2e8f0;
+  --card-bg: rgba(255, 255, 255, 0.95);
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --accent-color: #3b82f6;
+  --accent-hover: #2563eb;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-success: #22c55e;
+  --text-danger: #ef4444;
+  --text-warning: #f59e0b;
+  --text-info: #06b6d4;
+  --border-color: #334155;
+  --card-bg: #1e293b;
+  --input-bg: #334155;
+  --input-border: #475569;
+  --accent-color: #3b82f6;
+  --accent-hover: #2563eb;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+}
+
 html {
-  color-scheme: dark;
+  color-scheme: light dark;
 }
 
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
     sans-serif;
-  background-color: #0f172a;
-  color: #f1f5f9;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   line-height: 1.6;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .card {
-  background-color: #1e293b;
-  border: 1px solid #334155;
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
   border-radius: 0.5rem;
-  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  box-shadow: 0 10px 15px -3px var(--shadow-color),
+    0 4px 6px -4px var(--shadow-color);
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
 }
 
 .input-field {
   width: 100%;
   padding: 0.5rem 0.75rem;
-  background-color: #334155;
-  border: 1px solid #475569;
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 0.5rem;
-  color: #f1f5f9;
+  color: var(--text-primary);
   transition: all 0.2s;
 }
 
 .input-field::placeholder {
-  color: #94a3b8;
+  color: var(--text-muted);
 }
 
 .input-field:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 2px rgb(59 130 246 / 0.5);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
 }
 
 .btn-primary {
   padding: 0.5rem 1rem;
-  background-color: #2563eb;
+  background-color: var(--accent-color);
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -55,12 +98,12 @@ body {
 }
 
 .btn-primary:hover {
-  background-color: #1d4ed8;
+  background-color: var(--accent-hover);
 }
 
 .btn-primary:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(59 130 246 / 0.5);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
 }
 
 .btn-primary:disabled {
@@ -75,7 +118,7 @@ body {
   width: 2.75rem;
   align-items: center;
   border-radius: 9999px;
-  background-color: #475569;
+  background-color: var(--input-border);
   transition: background-color 0.2s;
   cursor: pointer;
   border: none;
@@ -83,11 +126,11 @@ body {
 
 .toggle-switch:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(59 130 246 / 0.5);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
 }
 
 .toggle-switch-active {
-  background-color: #2563eb;
+  background-color: var(--accent-color);
 }
 
 .toggle-switch-thumb {
@@ -102,6 +145,107 @@ body {
 
 .toggle-switch-thumb-active {
   transform: translateX(1.625rem);
+}
+
+/* Text utility classes for better readability */
+.text-primary {
+  color: var(--text-primary);
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.text-success {
+  color: var(--text-success);
+}
+
+.text-danger {
+  color: var(--text-danger);
+}
+
+.text-warning {
+  color: var(--text-warning);
+}
+
+.text-info {
+  color: var(--text-info);
+}
+
+/* Enhanced card content styling */
+.card .space-y-3 > div,
+.card .space-y-2 > div,
+.card p {
+  color: var(--text-primary);
+}
+
+.card .text-sm {
+  color: var(--text-secondary);
+}
+
+.card .text-xs {
+  color: var(--text-muted);
+}
+
+/* Fix hardcoded gray colors in cards for better theme support */
+.card span.text-gray-400 {
+  color: var(--text-secondary) !important;
+}
+
+.card span.text-gray-300 {
+  color: var(--text-secondary) !important;
+}
+
+.card span.text-gray-500 {
+  color: var(--text-muted) !important;
+}
+
+/* Ensure value spans maintain primary color */
+.card span.font-medium,
+.card span.font-bold {
+  color: var(--text-primary) !important;
+}
+
+/* Result text styling */
+.result-text {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.result-success {
+  color: var(--text-success);
+  font-weight: 600;
+}
+
+.result-warning {
+  color: var(--text-warning);
+  font-weight: 600;
+}
+
+.result-danger {
+  color: var(--text-danger);
+  font-weight: 600;
+}
+
+/* Status indicators */
+.status-profitable {
+  color: var(--text-success);
+}
+
+.status-unprofitable {
+  color: var(--text-danger);
+}
+
+.status-warning {
+  color: var(--text-warning);
+}
+
+.status-info {
+  color: var(--text-info);
 }
 
 /* Animation classes */
