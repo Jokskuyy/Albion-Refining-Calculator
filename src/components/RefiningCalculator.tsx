@@ -3,7 +3,6 @@ import {
   Calculator,
   TrendingUp,
   TrendingDown,
-  AlertCircle,
   Settings,
   Zap,
   Focus,
@@ -13,11 +12,7 @@ import {
   Moon,
   Sparkles,
   Crown,
-  Coins,
-  BarChart3,
-  Activity,
-  Target,
-  Layers,
+  Hammer,
 } from "lucide-react";
 import type { MaterialType, Tier } from "../constants/gameData";
 import {
@@ -27,16 +22,23 @@ import {
   MATERIAL_NAMES,
   REFINED_NAMES,
 } from "../constants/gameData";
-import {
-  calculateRefiningProfit,
-  type RefiningInput,
-  type RefiningResult,
-} from "../utils/calculations";
+// Removed unused RefiningResult import
 import {
   calculateResourceBasedRefining,
   type ResourceBasedInput,
   type ResourceBasedResult,
 } from "../utils/resourceCalculations";
+import {
+  calculateEquipmentCrafting,
+  type EquipmentCraftingInput,
+  type EquipmentCraftingResult,
+} from "../utils/equipmentCalculations";
+import {
+  ALL_EQUIPMENT,
+  EQUIPMENT_CATEGORIES,
+  getEquipmentsByCategory,
+  type EquipmentCategory,
+} from "../constants/equipmentData";
 
 interface ToggleSwitchProps {
   checked: boolean;
@@ -67,11 +69,17 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 
 export const RefiningCalculator: React.FC = () => {
   const [calculationMode, setCalculationMode] = useState<
-    "target" | "resources"
-  >("target");
+    "equipment" | "resources"
+  >("equipment");
   const [materialType, setMaterialType] = useState<MaterialType>("ore");
   const [tier, setTier] = useState<Tier>(4);
-  const [targetQuantity, setTargetQuantity] = useState<number>(100);
+
+  // For equipment crafting
+  const [selectedEquipmentCategory, setSelectedEquipmentCategory] =
+    useState<EquipmentCategory>("armor");
+  const [selectedEquipment, setSelectedEquipment] = useState<string>("cloth_sandals");
+  const [equipmentQuantity, setEquipmentQuantity] = useState<number>(10);
+  const [equipmentPrice, setEquipmentPrice] = useState<number>(1000);
 
   // For resource-based calculation
   const [ownedRawMaterials, setOwnedRawMaterials] = useState<number>(1000);
@@ -81,15 +89,26 @@ export const RefiningCalculator: React.FC = () => {
   const [refinedMaterialPrice, setRefinedMaterialPrice] = useState<number>(300);
   const [lowerTierRefinedPrice, setLowerTierRefinedPrice] =
     useState<number>(200);
+    
+  // Material prices for equipment crafting
+  const [materialPrices, setMaterialPrices] = useState<Record<MaterialType, number>>({
+    ore: 300,
+    hide: 250,
+    fiber: 200,
+    wood: 150,
+    stone: 180,
+  });
+
   const [isBonusCity, setIsBonusCity] = useState<boolean>(true);
   const [isRefiningDay, setIsRefiningDay] = useState<boolean>(false);
   const [useFocus, setUseFocus] = useState<boolean>(false);
-  const [marketTaxPercent, setMarketTaxPercent] = useState<number>(4);
+  const [marketTaxPercent] = useState<number>(4);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
-  const [result, setResult] = useState<RefiningResult | null>(null);
   const [resourceResult, setResourceResult] =
     useState<ResourceBasedResult | null>(null);
+  const [equipmentResult, setEquipmentResult] =
+    useState<EquipmentCraftingResult | null>(null);
 
   // Update document theme attribute
   useEffect(() => {
@@ -132,30 +151,29 @@ export const RefiningCalculator: React.FC = () => {
   };
 
   const calculateResult = () => {
-    if (calculationMode === "target") {
-      const input: RefiningInput = {
-        materialType,
+    if (calculationMode === "equipment") {
+      const equipment = ALL_EQUIPMENT[selectedEquipment];
+      if (!equipment) return;
+
+      const input: EquipmentCraftingInput = {
+        equipment,
         tier,
-        targetQuantity,
-        rawMaterialPrice,
-        refinedMaterialPrice,
-        lowerTierRefinedPrice,
+        quantity: equipmentQuantity,
+        materialPrices,
+        equipmentPrice,
         returnRate: isBonusCity
           ? isRefiningDay
             ? RETURN_RATES.bonusCityWithRefiningDay
             : RETURN_RATES.bonusCity
           : RETURN_RATES.nonBonusCity,
-        masteryLevel: 0,
         useFocus,
         stationFeePercent: 0,
         marketTaxPercent,
         isPremium: false,
-        availableRawMaterials: 0,
-        availableLowerTierRefined: 0,
       };
 
-      const calculatedResult = calculateRefiningProfit(input);
-      setResult(calculatedResult);
+      const calculatedResult = calculateEquipmentCrafting(input);
+      setEquipmentResult(calculatedResult);
       setResourceResult(null);
     } else {
       const input: ResourceBasedInput = {
@@ -180,7 +198,7 @@ export const RefiningCalculator: React.FC = () => {
 
       const calculatedResult = calculateResourceBasedRefining(input);
       setResourceResult(calculatedResult);
-      setResult(null);
+      setEquipmentResult(null);
     }
   };
 
@@ -190,7 +208,10 @@ export const RefiningCalculator: React.FC = () => {
     calculationMode,
     materialType,
     tier,
-    targetQuantity,
+    selectedEquipment,
+    equipmentQuantity,
+    equipmentPrice,
+    materialPrices,
     ownedRawMaterials,
     ownedLowerTierRefined,
     rawMaterialPrice,
@@ -239,16 +260,6 @@ export const RefiningCalculator: React.FC = () => {
   } border ${
     isDarkMode ? "border-slate-700" : "border-gray-200"
   } rounded-lg shadow-lg p-6`;
-
-  const inputClass = `w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-    isDarkMode
-      ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
-      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-  }`;
-
-  const labelClass = `block text-sm font-medium mb-2 ${
-    isDarkMode ? "text-gray-300" : "text-gray-700"
-  }`;
 
   const theme = isDarkMode ? themeConfig.dark : themeConfig.light;
 
@@ -355,9 +366,9 @@ export const RefiningCalculator: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button
-                  onClick={() => setCalculationMode("target")}
+                  onClick={() => setCalculationMode("equipment")}
                   className={`p-4 rounded-lg border-2 transition-all duration-200 ${
-                    calculationMode === "target"
+                    calculationMode === "equipment"
                       ? `border-blue-500 ${
                           isDarkMode
                             ? "bg-blue-500/20 text-blue-400"
@@ -370,14 +381,17 @@ export const RefiningCalculator: React.FC = () => {
                         }`
                   }`}
                 >
-                  <div className="text-left">
-                    <div className="font-medium">Target Based</div>
-                    <div
-                      className={`text-sm mt-1 ${
-                        isDarkMode ? "text-gray-400" : "text-gray-500"
-                      }`}
-                    >
-                      Calculate materials needed for specific quantity
+                  <div className="text-left flex items-center gap-2">
+                    <Hammer className="w-5 h-5" />
+                    <div>
+                      <div className="font-medium">Equipment Crafting</div>
+                      <div
+                        className={`text-sm mt-1 ${
+                          isDarkMode ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        Calculate profit from crafting equipment
+                      </div>
                     </div>
                   </div>
                 </button>
@@ -398,21 +412,24 @@ export const RefiningCalculator: React.FC = () => {
                         }`
                   }`}
                 >
-                  <div className="text-left">
-                    <div className="font-medium">Resource Based</div>
-                    <div
-                      className={`text-sm mt-1 ${
-                        isDarkMode ? "text-gray-400" : "text-gray-500"
-                      }`}
-                    >
-                      Calculate output from owned materials
+                  <div className="text-left flex items-center gap-2">
+                    <Archive className="w-5 h-5" />
+                    <div>
+                      <div className="font-medium">Resource Based</div>
+                      <div
+                        className={`text-sm mt-1 ${
+                          isDarkMode ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        Calculate output from owned materials
+                      </div>
                     </div>
                   </div>
                 </button>
               </div>
             </div>
 
-            {/* Material Selection */}
+            {/* Configuration Panel */}
             <div
               className={`${
                 isDarkMode ? themeConfig.dark.cardBg : themeConfig.light.cardBg
@@ -432,76 +449,106 @@ export const RefiningCalculator: React.FC = () => {
                       : themeConfig.light.accent
                   }`}
                 />
-                Material Configuration
+                {calculationMode === "equipment" ? "Equipment Configuration" : "Material Configuration"}
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    Material Type
-                  </label>
-                  <select
-                    value={materialType}
-                    onChange={(e) =>
-                      setMaterialType(e.target.value as MaterialType)
-                    }
-                    className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      isDarkMode
-                        ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                    }`}
-                  >
-                    {Object.entries(MATERIAL_TYPES).map(([key, material]) => (
-                      <option key={key} value={key}>
-                        {material.icon} {material.name} → {material.refined}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label
-                    className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    Tier
-                  </label>
-                  <select
-                    value={tier}
-                    onChange={(e) => setTier(Number(e.target.value) as Tier)}
-                    className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      isDarkMode
-                        ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                    }`}
-                  >
-                    {Object.keys(TIER_REQUIREMENTS).map((t) => (
-                      <option key={t} value={t}>
-                        T{t} {MATERIAL_NAMES[materialType][Number(t) as Tier]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {calculationMode === "target" ? (
+              {calculationMode === "equipment" ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label
                       className={`block text-sm font-medium mb-2 ${
                         isDarkMode ? "text-gray-300" : "text-gray-700"
                       }`}
                     >
-                      Target Quantity
+                      Equipment Category
+                    </label>
+                    <select
+                      value={selectedEquipmentCategory}
+                      onChange={(e) => {
+                        setSelectedEquipmentCategory(e.target.value as EquipmentCategory);
+                        // Reset selected equipment when category changes
+                        const equipmentsInCategory = getEquipmentsByCategory(e.target.value as EquipmentCategory);
+                        if (equipmentsInCategory.length > 0) {
+                          setSelectedEquipment(equipmentsInCategory[0].id);
+                        }
+                      }}
+                      className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      }`}
+                    >
+                      {Object.entries(EQUIPMENT_CATEGORIES).map(([key, category]) => (
+                        <option key={key} value={key}>
+                          {category.icon} {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Equipment
+                    </label>
+                    <select
+                      value={selectedEquipment}
+                      onChange={(e) => setSelectedEquipment(e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      }`}
+                    >
+                      {getEquipmentsByCategory(selectedEquipmentCategory).map((equipment) => (
+                        <option key={equipment.id} value={equipment.id}>
+                          {equipment.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Tier
+                    </label>
+                    <select
+                      value={tier}
+                      onChange={(e) => setTier(Number(e.target.value) as Tier)}
+                      className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      }`}
+                    >
+                      {Object.keys(TIER_REQUIREMENTS).map((t) => (
+                        <option key={t} value={t}>
+                          T{t}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Quantity to Craft
                     </label>
                     <input
                       type="number"
-                      value={targetQuantity}
+                      value={equipmentQuantity}
                       onChange={(e) =>
-                        setTargetQuantity(Number(e.target.value))
+                        setEquipmentQuantity(Number(e.target.value))
                       }
                       className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                         isDarkMode
@@ -511,21 +558,121 @@ export const RefiningCalculator: React.FC = () => {
                       min="1"
                     />
                   </div>
-                ) : (
-                  <>
+
+                  <div className="md:col-span-2">
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Equipment Selling Price (per unit)
+                    </label>
+                    <input
+                      type="number"
+                      value={equipmentPrice}
+                      onChange={(e) =>
+                        setEquipmentPrice(Number(e.target.value))
+                      }
+                      className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      }`}
+                      min="0"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Material Type
+                    </label>
+                    <select
+                      value={materialType}
+                      onChange={(e) =>
+                        setMaterialType(e.target.value as MaterialType)
+                      }
+                      className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      }`}
+                    >
+                      {Object.entries(MATERIAL_TYPES).map(([key, material]) => (
+                        <option key={key} value={key}>
+                          {material.icon} {material.name} → {material.refined}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Tier
+                    </label>
+                    <select
+                      value={tier}
+                      onChange={(e) => setTier(Number(e.target.value) as Tier)}
+                      className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      }`}
+                    >
+                      {Object.keys(TIER_REQUIREMENTS).map((t) => (
+                        <option key={t} value={t}>
+                          T{t} {MATERIAL_NAMES[materialType][Number(t) as Tier]}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Owned {rawMaterialName}
+                    </label>
+                    <input
+                      type="number"
+                      value={ownedRawMaterials}
+                      onChange={(e) =>
+                        setOwnedRawMaterials(Number(e.target.value))
+                      }
+                      className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      }`}
+                      min="0"
+                    />
+                  </div>
+
+                  {tier > 2 && (
                     <div>
                       <label
                         className={`block text-sm font-medium mb-2 ${
                           isDarkMode ? "text-gray-300" : "text-gray-700"
                         }`}
                       >
-                        Owned {rawMaterialName}
+                        Owned {lowerTierRefinedName}
                       </label>
                       <input
                         type="number"
-                        value={ownedRawMaterials}
+                        value={ownedLowerTierRefined}
                         onChange={(e) =>
-                          setOwnedRawMaterials(Number(e.target.value))
+                          setOwnedLowerTierRefined(Number(e.target.value))
                         }
                         className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                           isDarkMode
@@ -535,34 +682,9 @@ export const RefiningCalculator: React.FC = () => {
                         min="0"
                       />
                     </div>
-
-                    {tier > 2 && (
-                      <div>
-                        <label
-                          className={`block text-sm font-medium mb-2 ${
-                            isDarkMode ? "text-gray-300" : "text-gray-700"
-                          }`}
-                        >
-                          Owned {lowerTierRefinedName}
-                        </label>
-                        <input
-                          type="number"
-                          value={ownedLowerTierRefined}
-                          onChange={(e) =>
-                            setOwnedLowerTierRefined(Number(e.target.value))
-                          }
-                          className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                            isDarkMode
-                              ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
-                              : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                          }`}
-                          min="0"
-                        />
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Price Configuration */}
@@ -588,74 +710,111 @@ export const RefiningCalculator: React.FC = () => {
                 Price Configuration (Silver)
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label
-                    className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    {rawMaterialName} Price
-                  </label>
-                  <input
-                    type="number"
-                    value={rawMaterialPrice}
-                    onChange={(e) =>
-                      setRawMaterialPrice(Number(e.target.value))
-                    }
-                    className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      isDarkMode
-                        ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                    }`}
-                    min="0"
-                  />
+              {calculationMode === "equipment" ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(MATERIAL_TYPES).map(([key, material]) => (
+                    <div key={key}>
+                      <label
+                        className={`block text-sm font-medium mb-2 ${
+                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                        }`}
+                      >
+                        T{tier} {REFINED_NAMES[key as MaterialType][tier]} Price
+                      </label>
+                      <input
+                        type="number"
+                        value={materialPrices[key as MaterialType]}
+                        onChange={(e) =>
+                          setMaterialPrices(prev => ({
+                            ...prev,
+                            [key]: Number(e.target.value)
+                          }))
+                        }
+                        className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          isDarkMode
+                            ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                            : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                        }`}
+                        min="0"
+                        placeholder={`${material.refined} price`}
+                      />
+                    </div>
+                  ))}
                 </div>
-
-                <div>
-                  <label
-                    className={`block text-sm font-medium mb-2 ${
-                      isDarkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
-                  >
-                    {refinedMaterialName} Price
-                  </label>
-                  <input
-                    type="number"
-                    value={refinedMaterialPrice}
-                    onChange={(e) =>
-                      setRefinedMaterialPrice(Number(e.target.value))
-                    }
-                    className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      isDarkMode
-                        ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
-                        : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                    }`}
-                    min="0"
-                  />
-                </div>
-
-                {tier > 2 && (
-                  <div className="md:col-span-2">
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
                     <label
                       className={`block text-sm font-medium mb-2 ${
                         isDarkMode ? "text-gray-300" : "text-gray-700"
                       }`}
                     >
-                      {lowerTierRefinedName} Price
+                      {rawMaterialName} Price
                     </label>
                     <input
                       type="number"
-                      value={lowerTierRefinedPrice}
+                      value={rawMaterialPrice}
                       onChange={(e) =>
-                        setLowerTierRefinedPrice(Number(e.target.value))
+                        setRawMaterialPrice(Number(e.target.value))
                       }
-                      className="input-field"
+                      className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      }`}
                       min="0"
                     />
                   </div>
-                )}
-              </div>
+
+                  <div>
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      {refinedMaterialName} Price
+                    </label>
+                    <input
+                      type="number"
+                      value={refinedMaterialPrice}
+                      onChange={(e) =>
+                        setRefinedMaterialPrice(Number(e.target.value))
+                      }
+                      className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      }`}
+                      min="0"
+                    />
+                  </div>
+
+                  {tier > 2 && (
+                    <div className="md:col-span-2">
+                      <label
+                        className={`block text-sm font-medium mb-2 ${
+                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                        }`}
+                      >
+                        {lowerTierRefinedName} Price
+                      </label>
+                      <input
+                        type="number"
+                        value={lowerTierRefinedPrice}
+                        onChange={(e) =>
+                          setLowerTierRefinedPrice(Number(e.target.value))
+                        }
+                        className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          isDarkMode
+                            ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                            : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                        }`}
+                        min="0"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Settings */}
@@ -705,54 +864,49 @@ export const RefiningCalculator: React.FC = () => {
 
           {/* Results Panel */}
           <div className="space-y-6">
-            {(result || resourceResult) && (
+            {(equipmentResult || resourceResult) && (
               <>
-                {calculationMode === "target" && result && (
+                {calculationMode === "equipment" && equipmentResult && (
                   <>
-                    {/* Under Construction Notice */}
-                    <div
-                      className={`${
-                        isDarkMode
-                          ? themeConfig.dark.cardBg
-                          : themeConfig.light.cardBg
-                      } border ${
-                        isDarkMode ? "border-slate-700" : "border-gray-200"
-                      } rounded-lg shadow-lg p-6 animate-scale-in`}
-                    >
-                      <div
-                        className={`border rounded-lg p-4 ${
+                    {/* Equipment Info */}
+                    <div className={`${cardClass} animate-scale-in`}>
+                      <h3
+                        className={`text-lg font-bold mb-4 flex items-center gap-2 ${
                           isDarkMode
-                            ? "bg-yellow-900/20 border-yellow-700"
-                            : "bg-yellow-50 border-yellow-300"
+                            ? themeConfig.dark.text
+                            : themeConfig.light.text
                         }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <Settings
-                            className={`w-5 h-5 ${
-                              isDarkMode ? "text-yellow-400" : "text-yellow-600"
-                            }`}
-                          />
-                          <div>
-                            <div
-                              className={`font-medium ${
-                                isDarkMode
-                                  ? "text-yellow-400"
-                                  : "text-yellow-800"
-                              }`}
-                            >
-                              Target Mode - Under Construction
-                            </div>
-                            <div
-                              className={`text-sm mt-1 ${
-                                isDarkMode
-                                  ? "text-yellow-300/80"
-                                  : "text-yellow-700"
-                              }`}
-                            >
-                              This mode is currently being refined. Some
-                              features may not work correctly.
-                            </div>
-                          </div>
+                        <Hammer
+                          className={`w-5 h-5 ${
+                            isDarkMode
+                              ? themeConfig.dark.accent
+                              : themeConfig.light.accent
+                          }`}
+                        />
+                        Equipment Crafting Info
+                      </h3>
+
+                      <div className="space-y-3 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Equipment:</span>
+                          <span className="font-medium text-primary">
+                            T{equipmentResult.equipmentTier} {equipmentResult.equipmentName}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Quantity crafted:</span>
+                          <span className="font-medium text-primary">
+                            {equipmentResult.quantityCrafted.toLocaleString()}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Return rate:</span>
+                          <span className="font-medium status-profitable">
+                            {equipmentResult.effectiveReturnRate.toFixed(1)}%
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -766,7 +920,7 @@ export const RefiningCalculator: React.FC = () => {
                             : themeConfig.light.text
                         }`}
                       >
-                        <Calculator
+                        <Package
                           className={`w-5 h-5 ${
                             isDarkMode
                               ? themeConfig.dark.accent
@@ -777,25 +931,32 @@ export const RefiningCalculator: React.FC = () => {
                       </h3>
 
                       <div className="space-y-3 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-secondary">
-                            {rawMaterialName} needed:
-                          </span>
-                          <span className="font-medium text-primary">
-                            {result.rawMaterialsNeeded.toLocaleString()}
-                          </span>
-                        </div>
-
-                        {tier > 2 && (
-                          <div className="flex justify-between">
-                            <span className="text-secondary">
-                              {lowerTierRefinedName} needed:
-                            </span>
-                            <span className="font-medium text-primary">
-                              {result.lowerTierRefinedNeeded.toLocaleString()}
-                            </span>
+                        {equipmentResult.materialRequirements.map((req) => (
+                          <div key={req.materialType} className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-secondary">
+                                {req.refinedName} needed:
+                              </span>
+                              <span className="font-medium text-primary">
+                                {req.amount.toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted">
+                                Returned ({equipmentResult.effectiveReturnRate.toFixed(1)}%):
+                              </span>
+                              <span className="font-medium text-green-400">
+                                {req.returned.toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted">Net used:</span>
+                              <span className="font-medium text-red-400">
+                                {req.netUsed.toLocaleString()}
+                              </span>
+                            </div>
                           </div>
-                        )}
+                        ))}
 
                         <div
                           className={`border-t pt-2 ${
@@ -803,93 +964,86 @@ export const RefiningCalculator: React.FC = () => {
                           }`}
                         >
                           <div className="flex justify-between">
-                            <span className="text-secondary">
-                              Expected output:
+                            <span className="text-secondary font-medium">
+                              Total materials cost:
                             </span>
-                            <span className="font-medium text-primary">
-                              {result.expectedOutput.toLocaleString()}
+                            <span className="font-bold status-unprofitable">
+                              {equipmentResult.totalMaterialCost.toLocaleString()} 🪙
                             </span>
                           </div>
                         </div>
 
                         <div className="flex justify-between">
-                          <span className="text-secondary">Return rate:</span>
-                          <span className="font-medium status-profitable">
-                            {result.effectiveReturnRate.toFixed(1)}%
+                          <span className="text-secondary">
+                            Net materials cost:
+                          </span>
+                          <span className="font-medium text-red-400">
+                            {equipmentResult.totalNetMaterialCost.toLocaleString()} 🪙
                           </span>
                         </div>
 
-                        {!result.canCraftAll && (
-                          <div
-                            className={`rounded-lg p-3 mt-3 ${
-                              isDarkMode
-                                ? "bg-red-900/20 border border-red-700"
-                                : "bg-red-50 border border-red-200"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 status-unprofitable text-xs font-medium mb-1">
-                              <AlertCircle className="w-4 h-4" />
-                              Insufficient Materials
-                            </div>
-                            {result.missingRawMaterials > 0 && (
-                              <div className="text-xs status-unprofitable">
-                                Missing{" "}
-                                {result.missingRawMaterials.toLocaleString()}{" "}
-                                {rawMaterialName}
-                              </div>
-                            )}
-                            {result.missingLowerTierRefined > 0 && (
-                              <div className="text-xs status-unprofitable">
-                                Missing{" "}
-                                {result.missingLowerTierRefined.toLocaleString()}{" "}
-                                {lowerTierRefinedName}
-                              </div>
-                            )}
-                            <div className="text-xs text-muted mt-1">
-                              Max possible crafts:{" "}
-                              {result.maxPossibleCrafts.toLocaleString()}
-                            </div>
-                          </div>
-                        )}
+                        <div className="flex justify-between">
+                          <span className="text-secondary">
+                            Returned materials value:
+                          </span>
+                          <span className="font-medium text-green-400">
+                            {equipmentResult.returnedMaterialsValue.toLocaleString()} 🪙
+                          </span>
+                        </div>
                       </div>
                     </div>
 
                     {/* Cost Breakdown */}
-                    <div className="card p-6 animate-scale-in">
-                      <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                    <div className={`${cardClass} animate-scale-in`}>
+                      <h3
+                        className={`text-lg font-bold mb-4 flex items-center gap-2 ${
+                          isDarkMode
+                            ? themeConfig.dark.text
+                            : themeConfig.light.text
+                        }`}
+                      >
                         <TrendingDown className="w-5 h-5 text-red-400" />
                         Cost Breakdown
                       </h3>
 
                       <div className="space-y-3 text-sm">
+                        {equipmentResult.materialRequirements.map((req) => (
+                          <div key={req.materialType} className="flex justify-between">
+                            <span className="text-secondary">
+                              {req.refinedName} (net):
+                            </span>
+                            <span className="font-medium text-primary">
+                              {req.netCost.toLocaleString()} 🪙
+                            </span>
+                          </div>
+                        ))}
+
                         <div className="flex justify-between">
                           <span className="text-secondary">
-                            {rawMaterialName}:
+                            Station fee:
                           </span>
                           <span className="font-medium text-primary">
-                            {result.rawMaterialCost.toLocaleString()} 🪙
+                            {equipmentResult.stationFee.toLocaleString()} 🪙
                           </span>
                         </div>
 
-                        {tier > 2 && (
-                          <div className="flex justify-between">
-                            <span className="text-secondary">
-                              {lowerTierRefinedName}:
-                            </span>
-                            <span className="font-medium text-primary">
-                              {result.lowerTierRefinedCost.toLocaleString()} 🪙
-                            </span>
-                          </div>
-                        )}
+                        <div className="flex justify-between">
+                          <span className="text-secondary">
+                            Market tax:
+                          </span>
+                          <span className="font-medium text-primary">
+                            {equipmentResult.marketTax.toLocaleString()} 🪙
+                          </span>
+                        </div>
 
-                        {useFocus && (
+                        {useFocus && equipmentResult.focusCost > 0 && (
                           <div className="flex justify-between">
                             <span className="text-secondary flex items-center gap-1">
                               <Focus className="w-3 h-3" />
                               Focus cost:
                             </span>
                             <span className="font-medium text-primary">
-                              {result.focusCost.toLocaleString()} ⚡
+                              {equipmentResult.focusCost.toLocaleString()} ⚡
                             </span>
                           </div>
                         )}
@@ -904,7 +1058,7 @@ export const RefiningCalculator: React.FC = () => {
                               Total cost:
                             </span>
                             <span className="font-bold status-unprofitable">
-                              {result.totalCost.toLocaleString()} 🪙
+                              {equipmentResult.totalCost.toLocaleString()} 🪙
                             </span>
                           </div>
                         </div>
@@ -912,8 +1066,14 @@ export const RefiningCalculator: React.FC = () => {
                     </div>
 
                     {/* Profit Analysis */}
-                    <div className="card p-6 animate-scale-in">
-                      <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                    <div className={`${cardClass} animate-scale-in`}>
+                      <h3
+                        className={`text-lg font-bold mb-4 flex items-center gap-2 ${
+                          isDarkMode
+                            ? themeConfig.dark.text
+                            : themeConfig.light.text
+                        }`}
+                      >
                         <TrendingUp className="w-5 h-5 text-green-400" />
                         Profit Analysis
                       </h3>
@@ -922,7 +1082,7 @@ export const RefiningCalculator: React.FC = () => {
                         <div className="flex justify-between">
                           <span className="text-secondary">Total revenue:</span>
                           <span className="font-medium text-green-400">
-                            {result.totalRevenue.toLocaleString()} 🪙
+                            {equipmentResult.totalRevenue.toLocaleString()} 🪙
                           </span>
                         </div>
 
@@ -931,7 +1091,7 @@ export const RefiningCalculator: React.FC = () => {
                             Materials returned value:
                           </span>
                           <span className="font-medium text-blue-400">
-                            {result.returnedMaterialsValue.toLocaleString()} 🪙
+                            {equipmentResult.returnedMaterialsValue.toLocaleString()} 🪙
                           </span>
                         </div>
 
@@ -939,12 +1099,12 @@ export const RefiningCalculator: React.FC = () => {
                           <span className="text-gray-400">Gross profit:</span>
                           <span
                             className={`font-medium ${
-                              result.grossProfit >= 0
+                              equipmentResult.grossProfit >= 0
                                 ? "text-green-400"
                                 : "text-red-400"
                             }`}
                           >
-                            {result.grossProfit.toLocaleString()} 🪙
+                            {equipmentResult.grossProfit.toLocaleString()} 🪙
                           </span>
                         </div>
 
@@ -955,12 +1115,12 @@ export const RefiningCalculator: React.FC = () => {
                             </span>
                             <span
                               className={`font-bold text-lg ${
-                                result.netProfit >= 0
+                                equipmentResult.netProfit >= 0
                                   ? "text-green-400"
                                   : "text-red-400"
                               }`}
                             >
-                              {result.netProfit.toLocaleString()} 🪙
+                              {equipmentResult.netProfit.toLocaleString()} 🪙
                             </span>
                           </div>
                         </div>
@@ -971,12 +1131,12 @@ export const RefiningCalculator: React.FC = () => {
                           </span>
                           <span
                             className={`font-medium ${
-                              result.profitPerUnit >= 0
+                              equipmentResult.profitPerUnit >= 0
                                 ? "text-green-400"
                                 : "text-red-400"
                             }`}
                           >
-                            {result.profitPerUnit.toFixed(0)} 🪙
+                            {equipmentResult.profitPerUnit.toFixed(0)} 🪙
                           </span>
                         </div>
 
@@ -984,29 +1144,29 @@ export const RefiningCalculator: React.FC = () => {
                           <span className="text-gray-400">Profit margin:</span>
                           <span
                             className={`font-medium ${
-                              result.profitMargin >= 0
+                              equipmentResult.profitMargin >= 0
                                 ? "text-green-400"
                                 : "text-red-400"
                             }`}
                           >
-                            {result.profitMargin.toFixed(1)}%
+                            {equipmentResult.profitMargin.toFixed(1)}%
                           </span>
                         </div>
 
-                        {useFocus && result.profitPerFocus > 0 && (
+                        {useFocus && equipmentResult.profitPerFocus > 0 && (
                           <div className="flex justify-between">
                             <span className="text-gray-400 flex items-center gap-1">
                               <Zap className="w-3 h-3" />
                               Profit per focus:
                             </span>
                             <span className="font-medium text-purple-400">
-                              {result.profitPerFocus.toFixed(0)} 🪙
+                              {equipmentResult.profitPerFocus.toFixed(0)} 🪙
                             </span>
                           </div>
                         )}
                       </div>
 
-                      {result.netProfit >= 0 ? (
+                      {equipmentResult.isProfitable ? (
                         <div
                           className={`rounded-lg p-3 mt-4 ${
                             isDarkMode
@@ -1015,7 +1175,7 @@ export const RefiningCalculator: React.FC = () => {
                           }`}
                         >
                           <div className="status-profitable text-xs font-medium">
-                            ✅ Profitable refining operation
+                            ✅ Profitable equipment crafting
                           </div>
                         </div>
                       ) : (
@@ -1027,7 +1187,7 @@ export const RefiningCalculator: React.FC = () => {
                           }`}
                         >
                           <div className="status-unprofitable text-xs font-medium">
-                            ❌ Loss-making operation
+                            ❌ Loss-making crafting operation
                           </div>
                         </div>
                       )}
