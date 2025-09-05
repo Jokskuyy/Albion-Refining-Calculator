@@ -352,9 +352,6 @@ export const RefiningCalculator: React.FC = () => {
 
     // Close sessions view and show calculator
     setShowSessions(false);
-    
-    // Show success message (optional)
-    console.log('Session loaded:', sessionData.sessionName);
   };
 
   // Theme configuration
@@ -394,7 +391,7 @@ export const RefiningCalculator: React.FC = () => {
 
   return (
     <div
-      className={`min-h-screen ${theme.bg} ${theme.text} p-4 transition-all duration-500`}
+      className={`min-h-screen ${theme.bg} ${theme.text} p-2 sm:p-4 transition-all duration-500`}
       data-theme={isDarkMode ? "dark" : "light"}
     >
       {/* Floating decorative elements */}
@@ -416,7 +413,7 @@ export const RefiningCalculator: React.FC = () => {
               </div>
               <div>
                 <h1
-                  className={`text-4xl font-bold bg-gradient-to-r ${theme.accent} bg-clip-text text-transparent`}
+                  className={`text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r ${theme.accent} bg-clip-text text-transparent`}
                 >
                   Albion Refining Calculator
                 </h1>
@@ -877,7 +874,7 @@ export const RefiningCalculator: React.FC = () => {
               </h2>
 
               {calculationMode === "equipment" ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {Object.entries(MATERIAL_TYPES).map(([key, material]) => (
                     <div key={key}>
                       <label
@@ -1037,7 +1034,7 @@ export const RefiningCalculator: React.FC = () => {
           </div>
 
           {/* Results Panel */}
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {(equipmentResult || resourceResult) && (
               <>
                 {calculationMode === "equipment" && equipmentResult && (

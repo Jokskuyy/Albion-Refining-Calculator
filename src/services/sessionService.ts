@@ -78,10 +78,7 @@ class SessionService {
 
   // Get all sessions
   async getAllSessions(limit = 50, offset = 0): Promise<ApiResponse<SessionData[]>> {
-    console.log('🔍 Fetching sessions from:', `${API_BASE_URL}/sessions?limit=${limit}&offset=${offset}`);
-    const result = await this.fetchApi<SessionData[]>(`/sessions?limit=${limit}&offset=${offset}`);
-    console.log('📊 Sessions API response:', result);
-    return result;
+    return this.fetchApi<SessionData[]>(`/sessions?limit=${limit}&offset=${offset}`);
   }
 
   // Get session by ID

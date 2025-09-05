@@ -35,24 +35,18 @@ export const SessionsList: React.FC<SessionsListProps> = ({
   }, []);
 
   const loadSessions = async () => {
-    console.log('🔄 Loading sessions...');
     setLoading(true);
     setError('');
     
     try {
       const response = await sessionService.getAllSessions(50, 0);
-      console.log('📦 Sessions response:', response);
       
       if (response.success && response.data) {
-        console.log('✅ Sessions loaded:', response.data.length, 'sessions');
-        console.log('📋 Sessions data structure:', response.data);
         setSessions(response.data);
       } else {
-        console.log('❌ Failed to load sessions:', response.error);
         setError(response.error || 'Failed to load sessions');
       }
     } catch (err) {
-      console.log('💥 Exception loading sessions:', err);
       setError('Failed to connect to server');
       console.error('Load sessions error:', err);
     } finally {
@@ -113,30 +107,6 @@ export const SessionsList: React.FC<SessionsListProps> = ({
   const filteredSessions = sessions.filter(session => 
     session.calculationMode === calculationMode
   );
-  
-  console.log('🔍 Filtering sessions:', {
-    totalSessions: sessions.length,
-    currentMode: calculationMode,
-    filteredCount: filteredSessions.length,
-    allSessions: sessions.map(s => ({ 
-      name: s.sessionName, 
-      mode: s.calculationMode,
-      modeType: typeof s.calculationMode,
-      isEquipment: s.calculationMode === 'equipment',
-      isResources: s.calculationMode === 'resources'
-    }))
-  });
-  
-  // Additional debug for the filtering logic
-  console.log('🧪 Debug filtering:', {
-    calculationModeValue: calculationMode,
-    calculationModeType: typeof calculationMode,
-    firstSession: sessions[0] ? {
-      mode: sessions[0].calculationMode,
-      modeType: typeof sessions[0].calculationMode,
-      comparison: sessions[0].calculationMode === calculationMode
-    } : 'No sessions'
-  });
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -228,10 +198,10 @@ export const SessionsList: React.FC<SessionsListProps> = ({
                 key={session.id}
                 className="border border-gray-200 dark:border-slate-600 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors"
               >
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="flex-1">
                     {/* Session Name & Mode */}
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
                       <h3 className="font-medium text-gray-900 dark:text-white">
                         {session.sessionName}
                       </h3>
@@ -251,7 +221,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
                     </div>
 
                     {/* Session Details */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-sm text-gray-600 dark:text-gray-400 mb-2">
                       <div className="flex items-center gap-1">
                         <span className="font-medium">Tier:</span> T{session.tier}
                       </div>
@@ -298,7 +268,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 ml-4">
+                  <div className="flex items-center gap-2 sm:ml-4 justify-end sm:justify-start">
                     <button
                       onClick={() => handleLoadSession(session)}
                       className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"

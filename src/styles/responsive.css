@@ -1,0 +1,114 @@
+/* Responsive utilities for Albion Refining Calculator */
+
+/* Mobile-first responsive breakpoints */
+@media (max-width: 640px) {
+  /* Stack calculation mode buttons vertically on small screens */
+  .calculation-mode-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  /* Reduce padding on cards for mobile */
+  .card-mobile {
+    padding: 1rem;
+  }
+
+  /* Stack profit display vertically */
+  .profit-display {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Make tables scroll horizontally */
+  .table-container {
+    overflow-x: auto;
+  }
+
+  /* Reduce font sizes for mobile */
+  .text-mobile-sm {
+    font-size: 0.875rem;
+  }
+
+  .text-mobile-xs {
+    font-size: 0.75rem;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  /* Tablet styles */
+  .calculation-mode-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 769px) {
+  /* Desktop styles */
+  .calculation-mode-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+}
+
+/* Utility classes for responsive spacing */
+.spacing-mobile {
+  margin: 0.5rem;
+}
+
+.spacing-tablet {
+  margin: 1rem;
+}
+
+.spacing-desktop {
+  margin: 1.5rem;
+}
+
+/* Responsive button sizes */
+.btn-responsive {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .btn-responsive {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+}
+
+/* Responsive grid utilities */
+.grid-responsive-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .grid-responsive-2 {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+}
+
+.grid-responsive-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .grid-responsive-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+  }
+}
