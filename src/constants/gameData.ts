@@ -32,11 +32,18 @@ export const CITY_BONUSES = {
   caerleon: { material: "all", bonus: 15.2 },
 } as const;
 
-// Default return rates
+// Default return rates for REFINING
 export const RETURN_RATES = {
   bonusCity: 36.7, // Normal bonus city rate
   bonusCityWithRefiningDay: 46.7, // Bonus city + refining day
   nonBonusCity: 15.2,
+} as const;
+
+// Return rates for CRAFTING (different from refining)
+export const CRAFTING_RETURN_RATES = {
+  bonusCity: 24.8, // Royal city bonus for crafting
+  bonusCityWithRefiningDay: 34.8, // Royal city + refining day for crafting (24.8% + 10%)
+  nonBonusCity: 15.2, // Normal crafting without royal city bonus
 } as const;
 
 // Focus costs per tier (at max specialization)

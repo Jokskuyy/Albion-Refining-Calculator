@@ -465,3 +465,4 @@ export const EQUIPMENT_MATERIAL_MAPPING = {
   tools: ["ore", "wood", "fiber"],
   accessories: ["hide", "fiber"],
 } as const;
+

@@ -13,12 +13,14 @@ import {
   Sparkles,
   Crown,
   Hammer,
+  Save,
 } from "lucide-react";
 import type { MaterialType, Tier } from "../constants/gameData";
 import {
   MATERIAL_TYPES,
   TIER_REQUIREMENTS,
   RETURN_RATES,
+  CRAFTING_RETURN_RATES,
   MATERIAL_NAMES,
   REFINED_NAMES,
 } from "../constants/gameData";
@@ -39,6 +41,9 @@ import {
   getEquipmentsByCategory,
   type EquipmentCategory,
 } from "../constants/equipmentData";
+import { SaveSessionModal } from "./SaveSessionModal";
+import { SessionsList } from "./SessionsList";
+import { sessionService, type SessionData } from "../services/sessionService";
 
 interface ToggleSwitchProps {
   checked: boolean;
@@ -105,6 +110,13 @@ export const RefiningCalculator: React.FC = () => {
   const [marketTaxPercent] = useState<number>(4);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
+  // Save session state
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  
+  // Sessions view state
+  const [showSessions, setShowSessions] = useState<boolean>(false);
+
   const [resourceResult, setResourceResult] =
     useState<ResourceBasedResult | null>(null);
   const [equipmentResult, setEquipmentResult] =
@@ -163,9 +175,9 @@ export const RefiningCalculator: React.FC = () => {
         equipmentPrice,
         returnRate: isBonusCity
           ? isRefiningDay
-            ? RETURN_RATES.bonusCityWithRefiningDay
-            : RETURN_RATES.bonusCity
-          : RETURN_RATES.nonBonusCity,
+            ? CRAFTING_RETURN_RATES.bonusCityWithRefiningDay
+            : CRAFTING_RETURN_RATES.bonusCity
+          : CRAFTING_RETURN_RATES.nonBonusCity,
         useFocus,
         stationFeePercent: 0,
         marketTaxPercent,
@@ -227,6 +239,123 @@ export const RefiningCalculator: React.FC = () => {
   const refinedMaterialName = REFINED_NAMES[materialType][tier];
   const lowerTierRefinedName =
     tier > 2 ? REFINED_NAMES[materialType][(tier - 1) as Tier] : "";
+
+  // Save session functionality
+  const handleSaveSession = async (sessionName: string) => {
+    setIsSaving(true);
+    
+    try {
+      const currentResult = calculationMode === "equipment" ? equipmentResult : resourceResult;
+      
+      const sessionData: Omit<SessionData, 'id' | 'createdAt' | 'updatedAt'> = {
+        sessionName,
+        calculationMode,
+        tier,
+        returnRate: isBonusCity
+          ? isRefiningDay
+            ? calculationMode === "equipment" 
+              ? CRAFTING_RETURN_RATES.bonusCityWithRefiningDay
+              : RETURN_RATES.bonusCityWithRefiningDay
+            : calculationMode === "equipment"
+              ? CRAFTING_RETURN_RATES.bonusCity
+              : RETURN_RATES.bonusCity
+          : calculationMode === "equipment"
+            ? CRAFTING_RETURN_RATES.nonBonusCity
+            : RETURN_RATES.nonBonusCity,
+        useFocus,
+        isBonusCity,
+        isRefiningDay,
+        marketTaxPercent,
+        
+        // Equipment specific
+        ...(calculationMode === "equipment" && {
+          equipmentId: selectedEquipment,
+          equipmentQuantity,
+          equipmentPrice,
+          materialPrices,
+        }),
+        
+        // Resource specific  
+        ...(calculationMode === "resources" && {
+          materialType,
+          ownedRawMaterials,
+          ownedLowerTierRefined,
+          rawMaterialPrice,
+          refinedMaterialPrice,
+          lowerTierRefinedPrice,
+        }),
+        
+        // Results
+        totalProfit: currentResult?.netProfit || 0,
+        profitPerItem: currentResult?.profitPerUnit || 0,
+      };
+
+      const response = await sessionService.saveSession(sessionData);
+      
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to save session');
+      }
+      
+      // Success is handled by the modal
+    } catch (error) {
+      console.error('Save session error:', error);
+      throw error; // Re-throw to let modal handle the error display
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Load session functionality
+  const handleLoadSession = (sessionData: SessionData) => {
+    // Set common fields
+    setTier(sessionData.tier as Tier);
+    setIsBonusCity(sessionData.isBonusCity);
+    setIsRefiningDay(sessionData.isRefiningDay);
+    setUseFocus(sessionData.useFocus);
+    setCalculationMode(sessionData.calculationMode);
+
+    if (sessionData.calculationMode === 'equipment') {
+      // Load equipment specific data
+      if (sessionData.equipmentId) {
+        setSelectedEquipment(sessionData.equipmentId);
+      }
+      if (sessionData.equipmentQuantity) {
+        setEquipmentQuantity(sessionData.equipmentQuantity);
+      }
+      if (sessionData.equipmentPrice) {
+        setEquipmentPrice(sessionData.equipmentPrice);
+      }
+      if (sessionData.materialPrices) {
+        setMaterialPrices(sessionData.materialPrices);
+      }
+    } else {
+      // Load resource specific data
+      if (sessionData.materialType) {
+        setMaterialType(sessionData.materialType as any);
+      }
+      if (sessionData.ownedRawMaterials) {
+        setOwnedRawMaterials(sessionData.ownedRawMaterials);
+      }
+      if (sessionData.ownedLowerTierRefined) {
+        setOwnedLowerTierRefined(sessionData.ownedLowerTierRefined);
+      }
+      if (sessionData.rawMaterialPrice) {
+        setRawMaterialPrice(sessionData.rawMaterialPrice);
+      }
+      if (sessionData.refinedMaterialPrice) {
+        setRefinedMaterialPrice(sessionData.refinedMaterialPrice);
+      }
+      if (sessionData.lowerTierRefinedPrice) {
+        setLowerTierRefinedPrice(sessionData.lowerTierRefinedPrice);
+      }
+    }
+
+    // Close sessions view and show calculator
+    setShowSessions(false);
+    
+    // Show success message (optional)
+    console.log('Session loaded:', sessionData.sessionName);
+  };
 
   // Theme configuration
   const themeConfig = {
@@ -301,29 +430,56 @@ export const RefiningCalculator: React.FC = () => {
               </div>
             </div>
 
-            {/* Theme Toggle */}
-            <div className="flex items-center gap-3">
-              <span className={`text-sm ${theme.textMuted}`}>
-                {isDarkMode ? "Dark" : "Light"}
-              </span>
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4">
+              {/* View Sessions Button */}
               <button
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className={`relative w-14 h-7 ${theme.cardBg} rounded-full border transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500/50`}
+                onClick={() => setShowSessions(!showSessions)}
+                className={`px-3 sm:px-4 py-2 ${showSessions 
+                  ? 'bg-gradient-to-r from-purple-500 to-indigo-600' 
+                  : 'bg-gradient-to-r from-gray-500 to-gray-600'
+                } text-white rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 font-medium text-sm sm:text-base`}
               >
-                <div
-                  className={`absolute top-0.5 left-0.5 w-6 h-6 bg-gradient-to-r ${
-                    theme.accent
-                  } rounded-full shadow-lg transform transition-transform duration-300 flex items-center justify-center ${
-                    isDarkMode ? "translate-x-7" : "translate-x-0"
-                  }`}
-                >
-                  {isDarkMode ? (
-                    <Moon className="w-3 h-3 text-white" />
-                  ) : (
-                    <Sun className="w-3 h-3 text-white" />
-                  )}
-                </div>
+                <Archive className="w-4 h-4" />
+                <span className="hidden sm:inline">{showSessions ? 'Hide Sessions' : 'View Sessions'}</span>
+                <span className="sm:hidden">{showSessions ? 'Hide' : 'Sessions'}</span>
               </button>
+
+              {/* Save Button */}
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className={`px-3 sm:px-4 py-2 bg-gradient-to-r ${theme.accent} text-white rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 font-medium text-sm sm:text-base`}
+                disabled={(!equipmentResult && !resourceResult)}
+              >
+                <Save className="w-4 h-4" />
+                <span className="hidden sm:inline">Save Session</span>
+                <span className="sm:hidden">Save</span>
+              </button>
+
+              {/* Theme Toggle */}
+              <div className="flex items-center gap-3">
+                <span className={`text-sm ${theme.textMuted}`}>
+                  {isDarkMode ? "Dark" : "Light"}
+                </span>
+                <button
+                  onClick={() => setIsDarkMode(!isDarkMode)}
+                  className={`relative w-14 h-7 ${theme.cardBg} rounded-full border transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500/50`}
+                >
+                  <div
+                    className={`absolute top-0.5 left-0.5 w-6 h-6 bg-gradient-to-r ${
+                      theme.accent
+                    } rounded-full shadow-lg transform transition-transform duration-300 flex items-center justify-center ${
+                      isDarkMode ? "translate-x-7" : "translate-x-0"
+                    }`}
+                  >
+                    {isDarkMode ? (
+                      <Moon className="w-3 h-3 text-white" />
+                    ) : (
+                      <Sun className="w-3 h-3 text-white" />
+                    )}
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
           <p
@@ -338,9 +494,19 @@ export const RefiningCalculator: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {showSessions ? (
+          // Sessions View
+          <div className="mb-8">
+            <SessionsList 
+              onLoadSession={handleLoadSession}
+              calculationMode={calculationMode}
+            />
+          </div>
+        ) : (
+          // Calculator View
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 md:gap-6">
           {/* Input Panel */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="xl:col-span-2 space-y-4 md:space-y-6">
             {/* Calculation Mode Selection */}
             <div
               className={`${
@@ -839,14 +1005,22 @@ export const RefiningCalculator: React.FC = () => {
                   <ToggleSwitch
                     checked={isBonusCity}
                     onChange={handleBonusCityToggle}
-                    label={`Bonus City (${RETURN_RATES.bonusCity}% return rate)`}
+                    label={`Bonus City (${
+                      calculationMode === "equipment" 
+                        ? CRAFTING_RETURN_RATES.bonusCity 
+                        : RETURN_RATES.bonusCity
+                    }% return rate)`}
                   />
 
                   {isBonusCity && (
                     <ToggleSwitch
                       checked={isRefiningDay}
                       onChange={handleRefiningDayToggle}
-                      label={`Refining Day (+10% bonus = ${RETURN_RATES.bonusCityWithRefiningDay}%)`}
+                      label={`Refining Day (+10% bonus = ${
+                        calculationMode === "equipment" 
+                          ? CRAFTING_RETURN_RATES.bonusCityWithRefiningDay 
+                          : RETURN_RATES.bonusCityWithRefiningDay
+                      }%)`}
                     />
                   )}
                 </div>
@@ -1458,7 +1632,16 @@ export const RefiningCalculator: React.FC = () => {
             )}
           </div>
         </div>
+        )}
       </div>
+
+      {/* Save Session Modal */}
+      <SaveSessionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveSession}
+        isLoading={isSaving}
+      />
     </div>
   );
 };
