@@ -25,12 +25,26 @@ const sessionRoutes = require('./routes/sessions');
 app.use('/api/sessions', sessionRoutes);
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'Albion Refining Calculator API is running',
-    timestamp: new Date().toISOString()
-  });
+app.get('/api/health', async (req, res) => {
+  try {
+    const fileStorage = require('./services/fileStorage');
+    const stats = await fileStorage.getStats();
+    
+    res.json({ 
+      status: 'OK', 
+      message: 'Albion Refining Calculator API is running',
+      storage: 'JSON Files',
+      sessions: stats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'ERROR', 
+      message: 'File storage system error',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Error handling middleware

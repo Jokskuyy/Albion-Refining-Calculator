@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Session = require('../models/Session');
+const Session = require('../models/SessionFile');
 
 // Validation middleware
 const validateSessionData = (req, res, next) => {

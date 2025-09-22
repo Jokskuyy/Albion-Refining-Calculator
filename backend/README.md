@@ -1,12 +1,11 @@
 # Albion Refining Calculator - Backend API
 
-Backend API untuk menyimpan dan mengelola data calculator sessions menggunakan Express.js dan MySQL.
+Backend API untuk menyimpan dan mengelola data calculator sessions menggunakan Express.js dan JSON files.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js (v16 atau lebih tinggi)
-- MySQL Server
 - npm atau yarn
 
 ### Installation
@@ -16,28 +15,19 @@ Backend API untuk menyimpan dan mengelola data calculator sessions menggunakan E
    npm install
    ```
 
-2. **Setup environment variables:**
+2. **Setup environment variables (optional):**
    ```bash
    cp env.example .env
    ```
    
-   Edit `.env` file dengan konfigurasi database Anda:
+   Edit `.env` file jika diperlukan:
    ```env
-   DB_HOST=localhost
-   DB_PORT=3306
-   DB_USER=root
-   DB_PASSWORD=your_password
-   DB_NAME=albion_calculator
    PORT=3001
+   NODE_ENV=development
    FRONTEND_URL=http://localhost:5173
    ```
 
-3. **Initialize database:**
-   ```bash
-   npm run init-db
-   ```
-
-4. **Start server:**
+3. **Start server:**
    ```bash
    # Development mode
    npm run dev
@@ -48,10 +38,12 @@ Backend API untuk menyimpan dan mengelola data calculator sessions menggunakan E
 
 Server akan berjalan di `http://localhost:3001`
 
+Data session akan otomatis disimpan dalam file `data/sessions.json`
+
 ## 📊 API Endpoints
 
 ### Health Check
-- `GET /api/health` - Cek status server
+- `GET /api/health` - Cek status server dan statistik data
 
 ### Sessions Management
 - `GET /api/sessions` - Get all sessions
@@ -62,120 +54,145 @@ Server akan berjalan di `http://localhost:3001`
 - `PUT /api/sessions/:id` - Update session
 - `DELETE /api/sessions/:id` - Delete session
 
-## 💾 Database Schema
+## 💾 Data Storage
 
-### calculator_sessions
-```sql
-CREATE TABLE calculator_sessions (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  session_name VARCHAR(255) NOT NULL,
-  calculation_mode ENUM('equipment', 'resources') NOT NULL,
-  
-  -- Common fields
-  tier INT NOT NULL,
-  return_rate DECIMAL(5,2) NOT NULL,
-  use_focus BOOLEAN DEFAULT FALSE,
-  is_bonus_city BOOLEAN DEFAULT FALSE,
-  is_refining_day BOOLEAN DEFAULT FALSE,
-  market_tax_percent DECIMAL(5,2) DEFAULT 4.0,
-  
-  -- Equipment crafting specific fields
-  equipment_id VARCHAR(100) NULL,
-  equipment_quantity INT NULL,
-  equipment_price DECIMAL(12,2) NULL,
-  material_prices JSON NULL,
-  
-  -- Resource refining specific fields
-  material_type ENUM('ore', 'hide', 'fiber', 'wood', 'stone') NULL,
-  owned_raw_materials INT NULL,
-  owned_lower_tier_refined INT NULL,
-  raw_material_price DECIMAL(12,2) NULL,
-  refined_material_price DECIMAL(12,2) NULL,
-  lower_tier_refined_price DECIMAL(12,2) NULL,
-  
-  -- Results
-  total_profit DECIMAL(15,2) NULL,
-  profit_per_item DECIMAL(12,2) NULL,
-  
-  -- Metadata
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+### JSON File Storage
+Data disimpan dalam file `data/sessions.json` dengan format:
+
+```json
+[
+  {
+    "id": 1,
+    "sessionName": "T6 Sword Crafting",
+    "calculationMode": "equipment",
+    "tier": 6,
+    "returnRate": 36.7,
+    "useFocus": false,
+    "isBonusCity": true,
+    "isRefiningDay": false,
+    "marketTaxPercent": 4.0,
+    "equipmentId": "sword",
+    "equipmentQuantity": 10,
+    "equipmentPrice": 50000,
+    "materialPrices": {
+      "ore": 300,
+      "hide": 250,
+      "fiber": 200,
+      "wood": 150,
+      "stone": 180
+    },
+    "materialType": null,
+    "ownedRawMaterials": null,
+    "ownedLowerTierRefined": null,
+    "rawMaterialPrice": null,
+    "refinedMaterialPrice": null,
+    "lowerTierRefinedPrice": null,
+    "totalProfit": 15000,
+    "profitPerItem": 1500,
+    "createdAt": "2025-09-22T04:55:00.000Z",
+    "updatedAt": "2025-09-22T04:55:00.000Z"
+  }
+]
 ```
 
-## 🔧 API Usage Examples
+### Data Fields
 
-### Save Calculator Session
-```javascript
-POST /api/sessions
-Content-Type: application/json
+**Common Fields:**
+- `id` - Unique session identifier (auto-generated)
+- `sessionName` - User-defined name for the session
+- `calculationMode` - Type of calculation ("equipment" or "resources")
+- `tier` - Material/Equipment tier (2-8)
+- `returnRate` - Applied return rate percentage
+- `useFocus` - Whether focus is used
+- `isBonusCity` - Whether in bonus city
+- `isRefiningDay` - Whether refining day bonus applies
+- `marketTaxPercent` - Market tax percentage
+- `totalProfit` - Calculated total profit
+- `profitPerItem` - Calculated profit per item
+- `createdAt` - Session creation timestamp
+- `updatedAt` - Last update timestamp
 
-{
-  "sessionName": "T6 Sword Crafting",
-  "calculationMode": "equipment",
-  "tier": 6,
-  "returnRate": 24.8,
-  "useFocus": false,
-  "isBonusCity": true,
-  "isRefiningDay": false,
-  "equipmentId": "T6_SWORD",
-  "equipmentQuantity": 10,
-  "equipmentPrice": 50000,
-  "materialPrices": {
-    "ore": 1200,
-    "hide": 800,
-    "fiber": 900
-  },
-  "totalProfit": 125000,
-  "profitPerItem": 12500
-}
-```
+**Equipment Mode Fields:**
+- `equipmentId` - Equipment identifier
+- `equipmentQuantity` - Number of items to craft
+- `equipmentPrice` - Selling price per item
+- `materialPrices` - Object with prices for each material type
 
-### Get All Sessions
-```javascript
-GET /api/sessions?limit=20&offset=0
-```
+**Resource Mode Fields:**
+- `materialType` - Type of material being refined
+- `ownedRawMaterials` - Amount of raw materials owned
+- `ownedLowerTierRefined` - Amount of lower tier refined materials owned
+- `rawMaterialPrice` - Price per raw material
+- `refinedMaterialPrice` - Price per refined material
+- `lowerTierRefinedPrice` - Price per lower tier refined material
 
-### Search Sessions
-```javascript
-GET /api/sessions/search?q=sword
-```
+## 🔒 Features
+
+### Automatic Data Management
+- File dan folder otomatis dibuat saat startup
+- Auto-incrementing ID system
+- Atomic write operations untuk data consistency
+- Backup otomatis file lama
+
+### Error Handling
+- Comprehensive error handling untuk semua operations
+- Validation untuk input data
+- Safe file operations dengan retry logic
+
+### Performance
+- In-memory caching untuk operasi baca yang cepat
+- Efficient search dengan filter dan pagination
+- JSON parsing optimization
 
 ## 🛠️ Development
 
-### Project Structure
+### File Structure
 ```
 backend/
-├── config/
-│   └── database.js      # Database configuration
+├── data/
+│   └── sessions.json         # Data storage file
+├── services/
+│   └── fileStorage.js        # File storage service
 ├── models/
-│   └── Session.js       # Session model
+│   └── SessionFile.js        # Session model
 ├── routes/
-│   └── sessions.js      # API routes
-├── scripts/
-│   └── initDatabase.js  # Database initialization
-├── server.js            # Main server file
-├── package.json
-└── README.md
+│   └── sessions.js           # API routes
+├── backup/                   # MySQL backup files
+└── server.js                 # Main server file
 ```
 
-### Scripts
-- `npm start` - Start production server
-- `npm run dev` - Start development server with nodemon
-- `npm run init-db` - Initialize database and tables
+### Testing API
 
-## 🔒 Security Features
-- Helmet.js untuk security headers
-- CORS protection
-- Input validation
-- SQL injection protection (prepared statements)
-- Error handling middleware
+Health check:
+```bash
+curl http://localhost:3001/api/health
+```
 
-## 📝 Environment Variables
-- `DB_HOST` - Database host (default: localhost)
-- `DB_PORT` - Database port (default: 3306)  
-- `DB_USER` - Database username
-- `DB_PASSWORD` - Database password
-- `DB_NAME` - Database name (default: albion_calculator)
-- `PORT` - Server port (default: 3001)
-- `FRONTEND_URL` - Frontend URL for CORS (default: http://localhost:5173)
+Get all sessions:
+```bash
+curl http://localhost:3001/api/sessions
+```
+
+Create new session:
+```bash
+curl -X POST http://localhost:3001/api/sessions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sessionName": "Test Session",
+    "calculationMode": "equipment",
+    "tier": 6,
+    "returnRate": 36.7,
+    "equipmentId": "sword",
+    "equipmentQuantity": 10,
+    "equipmentPrice": 50000
+  }'
+```
+
+## 📝 Migration from MySQL
+
+Old MySQL files telah dipindahkan ke folder `backup/` untuk referensi:
+- `backup/database.js` - MySQL connection config
+- `backup/Session.js` - MySQL Session model  
+- `backup/initDatabase.js` - Database initialization script
+
+Sistem baru menggunakan JSON files dan tidak memerlukan database server external.
