@@ -3,7 +3,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 export interface SessionData {
   id?: number;
   sessionName: string;
-  calculationMode: 'equipment' | 'resources';
+  calculationMode: 'equipment' | 'resources' | 'multi-tier';
   tier: number;
   returnRate: number;
   useFocus: boolean;
@@ -24,6 +24,14 @@ export interface SessionData {
   rawMaterialPrice?: number;
   refinedMaterialPrice?: number;
   lowerTierRefinedPrice?: number;
+  
+  // Multi-tier specific
+  startTier?: number;
+  endTier?: number;
+  ownedStartMaterials?: number;
+  multiTierRawMaterials?: Record<number, number>;
+  multiTierRawPrices?: Record<number, number>;
+  multiTierRefinedPrices?: Record<number, number>;
   
   // Results
   totalProfit?: number;

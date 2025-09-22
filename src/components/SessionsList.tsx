@@ -10,13 +10,14 @@ import {
   Database,
   Crown,
   Hammer,
-  RefreshCw
+  RefreshCw,
+  TrendingUp
 } from 'lucide-react';
 import { sessionService, type SessionData } from '../services/sessionService';
 
 interface SessionsListProps {
   onLoadSession: (sessionData: SessionData) => void;
-  calculationMode: 'equipment' | 'resources';
+  calculationMode: 'equipment' | 'resources' | 'multi-tier';
 }
 
 export const SessionsList: React.FC<SessionsListProps> = ({ 
@@ -129,7 +130,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <Database className="w-5 h-5 text-blue-500" />
-            Your Saved Setups ({calculationMode === 'equipment' ? 'Crafting' : 'Refining'})
+            Your Saved Setups ({calculationMode === 'equipment' ? 'Crafting' : calculationMode === 'multi-tier' ? 'Multi-Tier' : 'Refining'})
           </h2>
           <button
             onClick={loadSessions}
@@ -211,6 +212,11 @@ export const SessionsList: React.FC<SessionsListProps> = ({
                             <Hammer className="w-3 h-3" />
                             Crafting
                           </>
+                        ) : session.calculationMode === 'multi-tier' ? (
+                          <>
+                            <TrendingUp className="w-3 h-3" />
+                            Multi-Tier
+                          </>
                         ) : (
                           <>
                             <Settings className="w-3 h-3" />
@@ -235,12 +241,18 @@ export const SessionsList: React.FC<SessionsListProps> = ({
                       </div>
                     </div>
 
-                    {/* Equipment/Resource Specific Info */}
+                    {/* Equipment/Resource/Multi-tier Specific Info */}
                     {session.calculationMode === 'equipment' ? (
                       <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                         <span className="font-medium">Equipment:</span> {session.equipmentId} 
                         <span className="ml-2">Qty: {session.equipmentQuantity}</span>
                         <span className="ml-2">Price: {formatCurrency(session.equipmentPrice || 0)}</span>
+                      </div>
+                    ) : session.calculationMode === 'multi-tier' ? (
+                      <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        <span className="font-medium">Range:</span> T{session.startTier} → T{session.endTier}
+                        <span className="ml-2">Material: {session.materialType}</span>
+                        <span className="ml-2">Starting: {formatCurrency(session.ownedStartMaterials || 0)}</span>
                       </div>
                     ) : (
                       <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">

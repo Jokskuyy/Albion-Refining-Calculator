@@ -36,6 +36,11 @@ import {
   type EquipmentCraftingResult,
 } from "../utils/equipmentCalculations";
 import {
+  calculateMultiTierRefining,
+  type MultiTierInput,
+  type MultiTierResult,
+} from "../utils/multiTierCalculations";
+import {
   ALL_EQUIPMENT,
   EQUIPMENT_CATEGORIES,
   getEquipmentsByCategory,
@@ -74,7 +79,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 
 export const RefiningCalculator: React.FC = () => {
   const [calculationMode, setCalculationMode] = useState<
-    "equipment" | "resources"
+    "equipment" | "resources" | "multi-tier"
   >("equipment");
   const [materialType, setMaterialType] = useState<MaterialType>("ore");
   const [tier, setTier] = useState<Tier>(4);
@@ -94,6 +99,20 @@ export const RefiningCalculator: React.FC = () => {
   const [refinedMaterialPrice, setRefinedMaterialPrice] = useState<number>(300);
   const [lowerTierRefinedPrice, setLowerTierRefinedPrice] =
     useState<number>(200);
+    
+  // For multi-tier calculation
+  const [startTier, setStartTier] = useState<Tier>(3);
+  const [endTier, setEndTier] = useState<Tier>(6);
+  const [ownedStartMaterials, setOwnedStartMaterials] = useState<number>(1000);
+  const [multiTierRawMaterials, setMultiTierRawMaterials] = useState<Record<Tier, number>>({
+    2: 0, 3: 1000, 4: 1000, 5: 1000, 6: 1000, 7: 1000, 8: 1000
+  });
+  const [multiTierRawPrices, setMultiTierRawPrices] = useState<Record<Tier, number>>({
+    2: 50, 3: 100, 4: 200, 5: 400, 6: 800, 7: 1600, 8: 3200
+  });
+  const [multiTierRefinedPrices, setMultiTierRefinedPrices] = useState<Record<Tier, number>>({
+    2: 150, 3: 300, 4: 600, 5: 1200, 6: 2400, 7: 4800, 8: 9600
+  });
     
   // Material prices for equipment crafting
   const [materialPrices, setMaterialPrices] = useState<Record<MaterialType, number>>({
@@ -121,6 +140,8 @@ export const RefiningCalculator: React.FC = () => {
     useState<ResourceBasedResult | null>(null);
   const [equipmentResult, setEquipmentResult] =
     useState<EquipmentCraftingResult | null>(null);
+  const [multiTierResult, setMultiTierResult] =
+    useState<MultiTierResult | null>(null);
 
   // Update document theme attribute
   useEffect(() => {
@@ -187,6 +208,34 @@ export const RefiningCalculator: React.FC = () => {
       const calculatedResult = calculateEquipmentCrafting(input);
       setEquipmentResult(calculatedResult);
       setResourceResult(null);
+      setMultiTierResult(null);
+    } else if (calculationMode === "multi-tier") {
+      const input: MultiTierInput = {
+        materialType,
+        startTier,
+        endTier,
+        ownedStartMaterials,
+        ownedRawMaterials: multiTierRawMaterials,
+        materialPrices: {
+          raw: multiTierRawPrices,
+          refined: multiTierRefinedPrices,
+        },
+        returnRate: isBonusCity
+          ? isRefiningDay
+            ? RETURN_RATES.bonusCityWithRefiningDay
+            : RETURN_RATES.bonusCity
+          : RETURN_RATES.nonBonusCity,
+        masteryLevel: 0,
+        useFocus,
+        stationFeePercent: 0,
+        marketTaxPercent,
+        isPremium: false,
+      };
+
+      const calculatedResult = calculateMultiTierRefining(input);
+      setMultiTierResult(calculatedResult);
+      setResourceResult(null);
+      setEquipmentResult(null);
     } else {
       const input: ResourceBasedInput = {
         materialType,
@@ -211,6 +260,7 @@ export const RefiningCalculator: React.FC = () => {
       const calculatedResult = calculateResourceBasedRefining(input);
       setResourceResult(calculatedResult);
       setEquipmentResult(null);
+      setMultiTierResult(null);
     }
   };
 
@@ -229,6 +279,12 @@ export const RefiningCalculator: React.FC = () => {
     rawMaterialPrice,
     refinedMaterialPrice,
     lowerTierRefinedPrice,
+    startTier,
+    endTier,
+    ownedStartMaterials,
+    multiTierRawMaterials,
+    multiTierRawPrices,
+    multiTierRefinedPrices,
     isBonusCity,
     isRefiningDay,
     useFocus,
@@ -245,7 +301,8 @@ export const RefiningCalculator: React.FC = () => {
     setIsSaving(true);
     
     try {
-      const currentResult = calculationMode === "equipment" ? equipmentResult : resourceResult;
+      const currentResult = calculationMode === "equipment" ? equipmentResult : 
+                        calculationMode === "multi-tier" ? multiTierResult : resourceResult;
       
       const sessionData: Omit<SessionData, 'id' | 'createdAt' | 'updatedAt'> = {
         sessionName,
@@ -283,6 +340,17 @@ export const RefiningCalculator: React.FC = () => {
           rawMaterialPrice,
           refinedMaterialPrice,
           lowerTierRefinedPrice,
+        }),
+        
+        // Multi-tier specific
+        ...(calculationMode === "multi-tier" && {
+          materialType,
+          startTier,
+          endTier,
+          ownedStartMaterials,
+          multiTierRawMaterials,
+          multiTierRawPrices,
+          multiTierRefinedPrices,
         }),
         
         // Results
@@ -327,6 +395,29 @@ export const RefiningCalculator: React.FC = () => {
       }
       if (sessionData.materialPrices) {
         setMaterialPrices(sessionData.materialPrices);
+      }
+    } else if (sessionData.calculationMode === 'multi-tier') {
+      // Load multi-tier specific data
+      if (sessionData.materialType) {
+        setMaterialType(sessionData.materialType as any);
+      }
+      if (sessionData.startTier) {
+        setStartTier(sessionData.startTier as any);
+      }
+      if (sessionData.endTier) {
+        setEndTier(sessionData.endTier as any);
+      }
+      if (sessionData.ownedStartMaterials) {
+        setOwnedStartMaterials(sessionData.ownedStartMaterials);
+      }
+      if (sessionData.multiTierRawMaterials) {
+        setMultiTierRawMaterials(sessionData.multiTierRawMaterials as any);
+      }
+      if (sessionData.multiTierRawPrices) {
+        setMultiTierRawPrices(sessionData.multiTierRawPrices as any);
+      }
+      if (sessionData.multiTierRefinedPrices) {
+        setMultiTierRefinedPrices(sessionData.multiTierRefinedPrices as any);
       }
     } else {
       // Load resource specific data
@@ -446,7 +537,7 @@ export const RefiningCalculator: React.FC = () => {
               <button
                 onClick={() => setIsModalOpen(true)}
                 className={`px-3 sm:px-4 py-2 bg-gradient-to-r ${theme.accent} text-white rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 font-medium text-sm sm:text-base`}
-                disabled={(!equipmentResult && !resourceResult)}
+                disabled={(!equipmentResult && !resourceResult && !multiTierResult)}
               >
                 <Save className="w-4 h-4" />
                 <span className="hidden sm:inline">Save Setup</span>
@@ -527,7 +618,7 @@ export const RefiningCalculator: React.FC = () => {
                 Calculation Mode
               </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <button
                   onClick={() => setCalculationMode("equipment")}
                   className={`p-4 rounded-lg border-2 transition-all duration-200 ${
@@ -589,6 +680,37 @@ export const RefiningCalculator: React.FC = () => {
                     </div>
                   </div>
                 </button>
+
+                <button
+                  onClick={() => setCalculationMode("multi-tier")}
+                  className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                    calculationMode === "multi-tier"
+                      ? `border-blue-500 ${
+                          isDarkMode
+                            ? "bg-blue-500/20 text-blue-400"
+                            : "bg-blue-50 text-blue-600"
+                        }`
+                      : `${
+                          isDarkMode
+                            ? "border-slate-600 hover:border-slate-500 text-slate-300"
+                            : "border-gray-300 hover:border-gray-400 text-gray-700"
+                        }`
+                  }`}
+                >
+                  <div className="text-left flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    <div>
+                      <div className="font-medium">Multi-Tier Refining</div>
+                      <div
+                        className={`text-sm mt-1 ${
+                          isDarkMode ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
+                        Refine through multiple tiers (e.g., T3 → T4 → T5 → T6)
+                      </div>
+                    </div>
+                  </div>
+                </button>
               </div>
             </div>
 
@@ -612,7 +734,9 @@ export const RefiningCalculator: React.FC = () => {
                       : themeConfig.light.accent
                   }`}
                 />
-{calculationMode === "equipment" ? "Equipment Setup" : "Material & Inventory Setup"}
+{calculationMode === "equipment" ? "Equipment Setup" : 
+  calculationMode === "multi-tier" ? "Multi-Tier Refining Setup" : 
+  "Material & Inventory Setup"}
               </h2>
 
               {calculationMode === "equipment" ? (
@@ -743,6 +867,167 @@ export const RefiningCalculator: React.FC = () => {
                       }`}
                       min="0"
                     />
+                  </div>
+                </div>
+              ) : calculationMode === "multi-tier" ? (
+                <div className="space-y-6">
+                  {/* Tier Range Selection */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        className={`block text-sm font-medium mb-2 ${
+                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                        }`}
+                      >
+                        Material Type
+                      </label>
+                      <select
+                        value={materialType}
+                        onChange={(e) =>
+                          setMaterialType(e.target.value as MaterialType)
+                        }
+                        className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          isDarkMode
+                            ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                            : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                        }`}
+                      >
+                        {Object.entries(MATERIAL_TYPES).map(([key, material]) => (
+                          <option key={key} value={key}>
+                            {material.icon} {material.name} → {material.refined}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label
+                        className={`block text-sm font-medium mb-2 ${
+                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                        }`}
+                      >
+                        Start Tier
+                      </label>
+                      <select
+                        value={startTier}
+                        onChange={(e) => {
+                          const newStartTier = Number(e.target.value) as Tier;
+                          setStartTier(newStartTier);
+                          if (newStartTier >= endTier) {
+                            setEndTier((newStartTier + 1) as Tier);
+                          }
+                        }}
+                        className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          isDarkMode
+                            ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                            : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                        }`}
+                      >
+                        {Object.keys(TIER_REQUIREMENTS).map((t) => {
+                          const tier = Number(t) as Tier;
+                          return tier < 8 ? (
+                            <option key={t} value={t}>
+                              T{t} {REFINED_NAMES[materialType][tier]}
+                            </option>
+                          ) : null;
+                        })}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label
+                        className={`block text-sm font-medium mb-2 ${
+                          isDarkMode ? "text-gray-300" : "text-gray-700"
+                        }`}
+                      >
+                        End Tier
+                      </label>
+                      <select
+                        value={endTier}
+                        onChange={(e) => setEndTier(Number(e.target.value) as Tier)}
+                        className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                          isDarkMode
+                            ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                            : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                        }`}
+                      >
+                        {Object.keys(TIER_REQUIREMENTS).map((t) => {
+                          const tier = Number(t) as Tier;
+                          return tier > startTier ? (
+                            <option key={t} value={t}>
+                              T{t} {REFINED_NAMES[materialType][tier]}
+                            </option>
+                          ) : null;
+                        })}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      className={`block text-sm font-medium mb-2 ${
+                        isDarkMode ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Starting Materials: T{startTier} {REFINED_NAMES[materialType][startTier]}
+                    </label>
+                    <input
+                      type="number"
+                      value={ownedStartMaterials}
+                      onChange={(e) =>
+                        setOwnedStartMaterials(Number(e.target.value))
+                      }
+                      className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        isDarkMode
+                          ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                      }`}
+                      min="0"
+                      placeholder="Amount of starting tier refined materials"
+                    />
+                  </div>
+
+                  {/* Raw Materials for Each Tier */}
+                  <div>
+                    <h4 className={`text-lg font-medium mb-3 ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}>
+                      Raw Materials Inventory
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {Object.keys(TIER_REQUIREMENTS).map((t) => {
+                        const tier = Number(t) as Tier;
+                        if (tier <= startTier || tier > endTier) return null;
+                        
+                        return (
+                          <div key={t}>
+                            <label
+                              className={`block text-sm font-medium mb-2 ${
+                                isDarkMode ? "text-gray-300" : "text-gray-700"
+                              }`}
+                            >
+                              T{tier} {MATERIAL_NAMES[materialType][tier]}
+                            </label>
+                            <input
+                              type="number"
+                              value={multiTierRawMaterials[tier]}
+                              onChange={(e) =>
+                                setMultiTierRawMaterials(prev => ({
+                                  ...prev,
+                                  [tier]: Number(e.target.value)
+                                }))
+                              }
+                              className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                isDarkMode
+                                  ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                                  : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                              }`}
+                              min="0"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -904,6 +1189,90 @@ export const RefiningCalculator: React.FC = () => {
                     </div>
                   ))}
                 </div>
+              ) : calculationMode === "multi-tier" ? (
+                <div className="space-y-6">
+                  {/* Raw Material Prices */}
+                  <div>
+                    <h4 className={`text-lg font-medium mb-3 ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}>
+                      Raw Material Prices
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {Object.keys(TIER_REQUIREMENTS).map((t) => {
+                        const tier = Number(t) as Tier;
+                        if (tier <= startTier || tier > endTier) return null;
+                        
+                        return (
+                          <div key={t}>
+                            <label
+                              className={`block text-sm font-medium mb-2 ${
+                                isDarkMode ? "text-gray-300" : "text-gray-700"
+                              }`}
+                            >
+                              T{tier} {MATERIAL_NAMES[materialType][tier]}
+                            </label>
+                            <input
+                              type="number"
+                              value={multiTierRawPrices[tier]}
+                              onChange={(e) =>
+                                setMultiTierRawPrices(prev => ({
+                                  ...prev,
+                                  [tier]: Number(e.target.value)
+                                }))
+                              }
+                              className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                isDarkMode
+                                  ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                                  : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                              }`}
+                              min="0"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Refined Material Prices */}
+                  <div>
+                    <h4 className={`text-lg font-medium mb-3 ${isDarkMode ? "text-gray-200" : "text-gray-800"}`}>
+                      Refined Material Prices
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                      {Object.keys(TIER_REQUIREMENTS).map((t) => {
+                        const tier = Number(t) as Tier;
+                        if (tier < startTier || tier > endTier) return null;
+                        
+                        return (
+                          <div key={t}>
+                            <label
+                              className={`block text-sm font-medium mb-2 ${
+                                isDarkMode ? "text-gray-300" : "text-gray-700"
+                              }`}
+                            >
+                              T{tier} {REFINED_NAMES[materialType][tier]}
+                            </label>
+                            <input
+                              type="number"
+                              value={multiTierRefinedPrices[tier]}
+                              onChange={(e) =>
+                                setMultiTierRefinedPrices(prev => ({
+                                  ...prev,
+                                  [tier]: Number(e.target.value)
+                                }))
+                              }
+                              className={`w-full px-3 py-2 border rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                isDarkMode
+                                  ? "bg-slate-700 border-slate-600 text-gray-100 placeholder-gray-400"
+                                  : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
+                              }`}
+                              min="0"
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -1035,7 +1404,7 @@ export const RefiningCalculator: React.FC = () => {
 
           {/* Results Panel */}
           <div className="space-y-4 md:space-y-6">
-            {(equipmentResult || resourceResult) && (
+            {(equipmentResult || resourceResult || multiTierResult) && (
               <>
                 {calculationMode === "equipment" && equipmentResult && (
                   <>
@@ -1619,6 +1988,230 @@ export const RefiningCalculator: React.FC = () => {
                         >
                           <div className="status-unprofitable text-xs font-medium">
                             ❌ Better to sell raw materials directly
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {calculationMode === "multi-tier" && multiTierResult && (
+                  <>
+                    {/* Multi-Tier Overview */}
+                    <div className={`${cardClass} animate-scale-in`}>
+                      <h3
+                        className={`text-lg font-bold mb-4 flex items-center gap-2 ${
+                          isDarkMode
+                            ? themeConfig.dark.text
+                            : themeConfig.light.text
+                        }`}
+                      >
+                        <TrendingUp
+                          className={`w-5 h-5 ${
+                            isDarkMode
+                              ? themeConfig.dark.accent
+                              : themeConfig.light.accent
+                          }`}
+                        />
+                        Multi-Tier Refining Overview
+                      </h3>
+
+                      <div className="space-y-3 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Material Type:</span>
+                          <span className="font-medium text-primary">
+                            {MATERIAL_TYPES[multiTierResult.materialType].icon} {MATERIAL_TYPES[multiTierResult.materialType].name}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Tier Range:</span>
+                          <span className="font-medium text-primary">
+                            T{multiTierResult.startTier} → T{multiTierResult.endTier} ({multiTierResult.totalTiers} tiers)
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Final Output:</span>
+                          <span className="font-medium text-green-400">
+                            {multiTierResult.finalRefinedProduced.toLocaleString()} T{multiTierResult.endTier} {REFINED_NAMES[multiTierResult.materialType][multiTierResult.endTier]}
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Material Efficiency:</span>
+                          <span className="font-medium text-blue-400">
+                            {multiTierResult.materialEfficiency.toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step-by-Step Breakdown */}
+                    <div className={`${cardClass} animate-scale-in`}>
+                      <h3
+                        className={`text-lg font-bold mb-4 flex items-center gap-2 ${
+                          isDarkMode
+                            ? themeConfig.dark.text
+                            : themeConfig.light.text
+                        }`}
+                      >
+                        <Package
+                          className={`w-5 h-5 ${
+                            isDarkMode
+                              ? themeConfig.dark.accent
+                              : themeConfig.light.accent
+                          }`}
+                        />
+                        Step-by-Step Breakdown
+                      </h3>
+
+                      <div className="space-y-4">
+                        {multiTierResult.refiningSteps.map((step, index) => (
+                          <div key={index} className={`p-4 rounded-lg border ${
+                            isDarkMode ? "border-slate-600 bg-slate-700/30" : "border-gray-200 bg-gray-50"
+                          }`}>
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="font-medium text-primary">
+                                Step {index + 1}: T{step.fromTier} → T{step.toTier}
+                              </span>
+                              <span className={`text-sm font-medium ${
+                                step.stepProfit >= 0 ? "text-green-400" : "text-red-400"
+                              }`}>
+                                {step.stepProfit >= 0 ? "+" : ""}{step.stepProfit.toLocaleString()} 🪙
+                              </span>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-4 text-xs">
+                              <div>
+                                <span className="text-secondary">Produced:</span>
+                                <span className="ml-2 font-medium">{step.refinedProduced.toLocaleString()}</span>
+                              </div>
+                              <div>
+                                <span className="text-secondary">Return Rate:</span>
+                                <span className="ml-2 font-medium">{step.effectiveReturnRate.toFixed(1)}%</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Profit Analysis */}
+                    <div className={`${cardClass} animate-scale-in`}>
+                      <h3
+                        className={`text-lg font-bold mb-4 flex items-center gap-2 ${
+                          isDarkMode
+                            ? themeConfig.dark.text
+                            : themeConfig.light.text
+                        }`}
+                      >
+                        <TrendingUp className="w-5 h-5 text-green-400" />
+                        Profit Analysis
+                      </h3>
+
+                      <div className="space-y-3 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Total Revenue:</span>
+                          <span className="font-medium text-green-400">
+                            {multiTierResult.totalRevenue.toLocaleString()} 🪙
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Total Costs:</span>
+                          <span className="font-medium text-red-400">
+                            {multiTierResult.totalCosts.toLocaleString()} 🪙
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Returned Materials Value:</span>
+                          <span className="font-medium text-blue-400">
+                            {multiTierResult.totalReturnedValue.toLocaleString()} 🪙
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Station Fees:</span>
+                          <span className="font-medium text-red-400">
+                            {multiTierResult.totalStationFees.toLocaleString()} 🪙
+                          </span>
+                        </div>
+
+                        {multiTierResult.totalFocusUsed > 0 && (
+                          <div className="flex justify-between">
+                            <span className="text-secondary flex items-center gap-1">
+                              <Focus className="w-3 h-3" />
+                              Focus Used:
+                            </span>
+                            <span className="font-medium text-purple-400">
+                              {multiTierResult.totalFocusUsed.toLocaleString()} ⚡
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="border-t border-dark-600 pt-2">
+                          <div className="flex justify-between">
+                            <span className="text-secondary font-medium">Net Profit:</span>
+                            <span className={`font-bold text-lg ${
+                              multiTierResult.netProfit >= 0 ? "text-green-400" : "text-red-400"
+                            }`}>
+                              {multiTierResult.netProfit.toLocaleString()} 🪙
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Profit per Unit:</span>
+                          <span className={`font-medium ${
+                            multiTierResult.profitPerUnit >= 0 ? "text-green-400" : "text-red-400"
+                          }`}>
+                            {multiTierResult.profitPerUnit.toFixed(0)} 🪙
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Profit Margin:</span>
+                          <span className={`font-medium ${
+                            multiTierResult.profitMargin >= 0 ? "text-green-400" : "text-red-400"
+                          }`}>
+                            {multiTierResult.profitMargin.toFixed(1)}%
+                          </span>
+                        </div>
+
+                        <div className="flex justify-between">
+                          <span className="text-secondary">Economic Efficiency:</span>
+                          <span className={`font-medium ${
+                            multiTierResult.economicEfficiency >= 0 ? "text-green-400" : "text-red-400"
+                          }`}>
+                            {multiTierResult.economicEfficiency.toFixed(1)}% ROI
+                          </span>
+                        </div>
+                      </div>
+
+                      {multiTierResult.netProfit >= 0 ? (
+                        <div
+                          className={`rounded-lg p-3 mt-4 ${
+                            isDarkMode
+                              ? "bg-green-900/20 border border-green-700"
+                              : "bg-green-50 border border-green-200"
+                          }`}
+                        >
+                          <div className="status-profitable text-xs font-medium">
+                            ✅ Multi-tier refining is profitable!
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          className={`rounded-lg p-3 mt-4 ${
+                            isDarkMode
+                              ? "bg-red-900/20 border border-red-700"
+                              : "bg-red-50 border border-red-200"
+                          }`}
+                        >
+                          <div className="status-unprofitable text-xs font-medium">
+                            ❌ Multi-tier refining will lose money
                           </div>
                         </div>
                       )}
