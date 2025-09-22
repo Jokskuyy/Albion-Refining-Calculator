@@ -78,7 +78,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
   };
 
   const handleDeleteSession = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this session?')) {
+    if (!confirm('Are you sure you want to delete this saved setup?')) {
       return;
     }
 
@@ -89,10 +89,10 @@ export const SessionsList: React.FC<SessionsListProps> = ({
       if (response.success) {
         setSessions(prev => prev.filter(session => session.id !== id));
       } else {
-        setError(response.error || 'Failed to delete session');
+        setError(response.error || 'Failed to delete setup');
       }
     } catch (err) {
-      setError('Failed to delete session');
+      setError('Failed to delete setup');
       console.error('Delete error:', err);
     } finally {
       setDeletingId(null);
@@ -129,7 +129,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <Database className="w-5 h-5 text-blue-500" />
-            Saved Sessions ({calculationMode === 'equipment' ? 'Crafting' : 'Refining'})
+            Your Saved Setups ({calculationMode === 'equipment' ? 'Crafting' : 'Refining'})
           </h2>
           <button
             onClick={loadSessions}
@@ -145,7 +145,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search sessions..."
+            placeholder="Search your saved setups..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -170,7 +170,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
         {loading && (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
-            <span className="ml-2 text-gray-600 dark:text-gray-400">Loading sessions...</span>
+            <span className="ml-2 text-gray-600 dark:text-gray-400">Loading your setups...</span>
           </div>
         )}
 
@@ -179,12 +179,12 @@ export const SessionsList: React.FC<SessionsListProps> = ({
           <div className="text-center py-8">
             <Database className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              No saved sessions
+              No saved setups yet
             </h3>
             <p className="text-gray-500 dark:text-gray-400">
               {searchQuery 
-                ? 'No sessions found matching your search.' 
-                : `Start by saving a ${calculationMode} session from the calculator.`
+                ? 'No setups found matching your search.' 
+                : `Use the calculator to create a ${calculationMode} setup, then save it!`
               }
             </p>
           </div>
@@ -272,7 +272,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
                     <button
                       onClick={() => handleLoadSession(session)}
                       className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
-                      title="Load session"
+                      title="Load this setup"
                     >
                       <Play className="w-4 h-4" />
                     </button>
@@ -280,7 +280,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
                       onClick={() => handleDeleteSession(session.id!)}
                       disabled={deletingId === session.id}
                       className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
-                      title="Delete session"
+                      title="Delete this setup"
                     >
                       {deletingId === session.id ? (
                         <Loader2 className="w-4 h-4 animate-spin" />

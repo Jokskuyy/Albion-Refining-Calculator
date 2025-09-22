@@ -415,12 +415,12 @@ export const RefiningCalculator: React.FC = () => {
                 <h1
                   className={`text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r ${theme.accent} bg-clip-text text-transparent`}
                 >
-                  Albion Refining Calculator
+                  Albion Online Calculator
                 </h1>
                 <div className="flex items-center gap-2 mt-1">
                   <Crown className="w-4 h-4 text-yellow-500" />
                   <span className={`text-sm ${theme.textMuted} font-medium`}>
-                    Premium Analytics Suite
+                    Crafting & Refining Profit Calculator
                   </span>
                   <Sparkles className="w-4 h-4 text-purple-500" />
                 </div>
@@ -438,8 +438,8 @@ export const RefiningCalculator: React.FC = () => {
                 } text-white rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 font-medium text-sm sm:text-base`}
               >
                 <Archive className="w-4 h-4" />
-                <span className="hidden sm:inline">{showSessions ? 'Hide Sessions' : 'View Sessions'}</span>
-                <span className="sm:hidden">{showSessions ? 'Hide' : 'Sessions'}</span>
+                <span className="hidden sm:inline">{showSessions ? 'Hide Saved' : 'View Saved'}</span>
+                <span className="sm:hidden">{showSessions ? 'Hide' : 'Saved'}</span>
               </button>
 
               {/* Save Button */}
@@ -449,7 +449,7 @@ export const RefiningCalculator: React.FC = () => {
                 disabled={(!equipmentResult && !resourceResult)}
               >
                 <Save className="w-4 h-4" />
-                <span className="hidden sm:inline">Save Session</span>
+                <span className="hidden sm:inline">Save Setup</span>
                 <span className="sm:hidden">Save</span>
               </button>
 
@@ -486,8 +486,8 @@ export const RefiningCalculator: React.FC = () => {
                 : themeConfig.light.textSecondary
             }`}
           >
-            Calculate refining costs, profits, and material requirements with
-            Albion Online mechanics
+            Calculate crafting costs, refining profits, and material requirements 
+            using accurate Albion Online game mechanics
           </p>
         </div>
 
@@ -553,7 +553,7 @@ export const RefiningCalculator: React.FC = () => {
                           isDarkMode ? "text-gray-400" : "text-gray-500"
                         }`}
                       >
-                        Calculate profit from crafting equipment
+                        Calculate profits when crafting weapons & armor from refined materials
                       </div>
                     </div>
                   </div>
@@ -578,13 +578,13 @@ export const RefiningCalculator: React.FC = () => {
                   <div className="text-left flex items-center gap-2">
                     <Archive className="w-5 h-5" />
                     <div>
-                      <div className="font-medium">Resource Based</div>
+                      <div className="font-medium">Material Refining</div>
                       <div
                         className={`text-sm mt-1 ${
                           isDarkMode ? "text-gray-400" : "text-gray-500"
                         }`}
                       >
-                        Calculate output from owned materials
+                        Calculate profits when refining raw materials you already own
                       </div>
                     </div>
                   </div>
@@ -612,7 +612,7 @@ export const RefiningCalculator: React.FC = () => {
                       : themeConfig.light.accent
                   }`}
                 />
-                {calculationMode === "equipment" ? "Equipment Configuration" : "Material Configuration"}
+{calculationMode === "equipment" ? "Equipment Setup" : "Material & Inventory Setup"}
               </h2>
 
               {calculationMode === "equipment" ? (
@@ -705,7 +705,7 @@ export const RefiningCalculator: React.FC = () => {
                         isDarkMode ? "text-gray-300" : "text-gray-700"
                       }`}
                     >
-                      Quantity to Craft
+                      How Many to Craft
                     </label>
                     <input
                       type="number"
@@ -728,7 +728,7 @@ export const RefiningCalculator: React.FC = () => {
                         isDarkMode ? "text-gray-300" : "text-gray-700"
                       }`}
                     >
-                      Equipment Selling Price (per unit)
+                      Market Selling Price (per piece)
                     </label>
                     <input
                       type="number"
@@ -805,7 +805,7 @@ export const RefiningCalculator: React.FC = () => {
                         isDarkMode ? "text-gray-300" : "text-gray-700"
                       }`}
                     >
-                      Owned {rawMaterialName}
+                      Materials Owned: {rawMaterialName}
                     </label>
                     <input
                       type="number"
@@ -829,7 +829,7 @@ export const RefiningCalculator: React.FC = () => {
                           isDarkMode ? "text-gray-300" : "text-gray-700"
                         }`}
                       >
-                        Owned {lowerTierRefinedName}
+                        Lower Tier Owned: {lowerTierRefinedName}
                       </label>
                       <input
                         type="number"
@@ -870,7 +870,7 @@ export const RefiningCalculator: React.FC = () => {
                       : themeConfig.light.accent
                   }`}
                 />
-                Price Configuration (Silver)
+                Market Prices (Silver per unit)
               </h2>
 
               {calculationMode === "equipment" ? (
@@ -882,7 +882,7 @@ export const RefiningCalculator: React.FC = () => {
                           isDarkMode ? "text-gray-300" : "text-gray-700"
                         }`}
                       >
-                        T{tier} {REFINED_NAMES[key as MaterialType][tier]} Price
+                        T{tier} {REFINED_NAMES[key as MaterialType][tier]}
                       </label>
                       <input
                         type="number"
@@ -912,7 +912,7 @@ export const RefiningCalculator: React.FC = () => {
                         isDarkMode ? "text-gray-300" : "text-gray-700"
                       }`}
                     >
-                      {rawMaterialName} Price
+                      Raw Material: {rawMaterialName}
                     </label>
                     <input
                       type="number"
@@ -935,7 +935,7 @@ export const RefiningCalculator: React.FC = () => {
                         isDarkMode ? "text-gray-300" : "text-gray-700"
                       }`}
                     >
-                      {refinedMaterialName} Price
+                      Refined Material: {refinedMaterialName}
                     </label>
                     <input
                       type="number"
@@ -959,7 +959,7 @@ export const RefiningCalculator: React.FC = () => {
                           isDarkMode ? "text-gray-300" : "text-gray-700"
                         }`}
                       >
-                        {lowerTierRefinedName} Price
+                        Lower Tier: {lowerTierRefinedName}
                       </label>
                       <input
                         type="number"
@@ -994,7 +994,7 @@ export const RefiningCalculator: React.FC = () => {
                       : themeConfig.light.accent
                   }`}
                 />
-                Refining Settings
+                Bonus & Return Rate Settings
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1002,18 +1002,18 @@ export const RefiningCalculator: React.FC = () => {
                   <ToggleSwitch
                     checked={isBonusCity}
                     onChange={handleBonusCityToggle}
-                    label={`Bonus City (${
+                    label={`Bonus City - Higher return rate (${
                       calculationMode === "equipment" 
                         ? CRAFTING_RETURN_RATES.bonusCity 
                         : RETURN_RATES.bonusCity
-                    }% return rate)`}
+                    }%)`}
                   />
 
                   {isBonusCity && (
                     <ToggleSwitch
                       checked={isRefiningDay}
                       onChange={handleRefiningDayToggle}
-                      label={`Refining Day (+10% bonus = ${
+                      label={`Refining Day - Additional +10% bonus (Total: ${
                         calculationMode === "equipment" 
                           ? CRAFTING_RETURN_RATES.bonusCityWithRefiningDay 
                           : RETURN_RATES.bonusCityWithRefiningDay
@@ -1026,7 +1026,7 @@ export const RefiningCalculator: React.FC = () => {
                   <ToggleSwitch
                     checked={useFocus}
                     onChange={handleUseFocusToggle}
-                    label="Use Focus (53.9% return rate)"
+                    label="Use Focus - Guaranteed high returns (53.9% rate)"
                   />
                 </div>
               </div>
@@ -1055,7 +1055,7 @@ export const RefiningCalculator: React.FC = () => {
                               : themeConfig.light.accent
                           }`}
                         />
-                        Equipment Crafting Info
+                        Crafting Summary
                       </h3>
 
                       <div className="space-y-3 text-sm">
@@ -1067,7 +1067,7 @@ export const RefiningCalculator: React.FC = () => {
                         </div>
 
                         <div className="flex justify-between">
-                          <span className="text-secondary">Quantity crafted:</span>
+                          <span className="text-secondary">Items to craft:</span>
                           <span className="font-medium text-primary">
                             {equipmentResult.quantityCrafted.toLocaleString()}
                           </span>
@@ -1098,7 +1098,7 @@ export const RefiningCalculator: React.FC = () => {
                               : themeConfig.light.accent
                           }`}
                         />
-                        Material Requirements
+                        Materials Needed
                       </h3>
 
                       <div className="space-y-3 text-sm">
@@ -1106,7 +1106,7 @@ export const RefiningCalculator: React.FC = () => {
                           <div key={req.materialType} className="space-y-2">
                             <div className="flex justify-between">
                               <span className="text-secondary">
-                                {req.refinedName} needed:
+                                {req.refinedName} required:
                               </span>
                               <span className="font-medium text-primary">
                                 {req.amount.toLocaleString()}
@@ -1114,14 +1114,14 @@ export const RefiningCalculator: React.FC = () => {
                             </div>
                             <div className="flex justify-between text-xs">
                               <span className="text-muted">
-                                Returned ({equipmentResult.effectiveReturnRate.toFixed(1)}%):
+                                Materials returned:
                               </span>
                               <span className="font-medium text-green-400">
                                 {req.returned.toLocaleString()}
                               </span>
                             </div>
                             <div className="flex justify-between text-xs">
-                              <span className="text-muted">Net used:</span>
+                              <span className="text-muted">Actually consumed:</span>
                               <span className="font-medium text-red-400">
                                 {req.netUsed.toLocaleString()}
                               </span>
@@ -1136,7 +1136,7 @@ export const RefiningCalculator: React.FC = () => {
                         >
                           <div className="flex justify-between">
                             <span className="text-secondary font-medium">
-                              Total materials cost:
+                              Total material investment:
                             </span>
                             <span className="font-bold status-unprofitable">
                               {equipmentResult.totalMaterialCost.toLocaleString()} 🪙
@@ -1146,7 +1146,7 @@ export const RefiningCalculator: React.FC = () => {
 
                         <div className="flex justify-between">
                           <span className="text-secondary">
-                            Net materials cost:
+                            Actual material cost:
                           </span>
                           <span className="font-medium text-red-400">
                             {equipmentResult.totalNetMaterialCost.toLocaleString()} 🪙
@@ -1346,7 +1346,7 @@ export const RefiningCalculator: React.FC = () => {
                           }`}
                         >
                           <div className="status-profitable text-xs font-medium">
-                            ✅ Profitable equipment crafting
+                            ✅ This crafting operation is profitable!
                           </div>
                         </div>
                       ) : (
@@ -1358,7 +1358,7 @@ export const RefiningCalculator: React.FC = () => {
                           }`}
                         >
                           <div className="status-unprofitable text-xs font-medium">
-                            ❌ Loss-making crafting operation
+                            ❌ This crafting operation will lose money
                           </div>
                         </div>
                       )}
@@ -1606,7 +1606,7 @@ export const RefiningCalculator: React.FC = () => {
                           }`}
                         >
                           <div className="status-profitable text-xs font-medium">
-                            ✅ Profitable refining from owned resources
+                            ✅ Refining your materials is profitable!
                           </div>
                         </div>
                       ) : (
@@ -1618,7 +1618,7 @@ export const RefiningCalculator: React.FC = () => {
                           }`}
                         >
                           <div className="status-unprofitable text-xs font-medium">
-                            ❌ Loss compared to selling raw materials
+                            ❌ Better to sell raw materials directly
                           </div>
                         </div>
                       )}

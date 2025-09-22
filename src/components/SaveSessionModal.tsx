@@ -22,12 +22,12 @@ export const SaveSessionModal: React.FC<SaveSessionModalProps> = ({
     e.preventDefault();
     
     if (!sessionName.trim()) {
-      setError('Session name is required');
+      setError('Please enter a name for this setup');
       return;
     }
 
     if (sessionName.trim().length < 3) {
-      setError('Session name must be at least 3 characters long');
+      setError('Name must be at least 3 characters long');
       return;
     }
 
@@ -42,7 +42,7 @@ export const SaveSessionModal: React.FC<SaveSessionModalProps> = ({
         handleClose();
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save session');
+      setError(err instanceof Error ? err.message : 'Failed to save setup');
     }
   };
 
@@ -62,7 +62,7 @@ export const SaveSessionModal: React.FC<SaveSessionModalProps> = ({
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <Save className="w-5 h-5 text-blue-500" />
-            Save Calculator Session
+            Save This Setup
           </h2>
           <button
             onClick={handleClose}
@@ -80,7 +80,7 @@ export const SaveSessionModal: React.FC<SaveSessionModalProps> = ({
               htmlFor="sessionName" 
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
-              Session Name
+              Give it a name
             </label>
             <input
               type="text"
@@ -90,13 +90,13 @@ export const SaveSessionModal: React.FC<SaveSessionModalProps> = ({
                 setSessionName(e.target.value);
                 setError(''); // Clear error when typing
               }}
-              placeholder="e.g., T6 Sword Crafting, Fiber Refining Setup"
+              placeholder="e.g., T6 Sword Profit, Daily Fiber Refining"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white"
               disabled={isLoading || success}
               maxLength={255}
             />
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Choose a descriptive name to easily identify this session later
+              Use a descriptive name so you can easily find this setup later
             </p>
           </div>
 
@@ -113,7 +113,7 @@ export const SaveSessionModal: React.FC<SaveSessionModalProps> = ({
             <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-green-500" />
               <span className="text-sm text-green-700 dark:text-green-400">
-                Session saved successfully!
+                Setup saved successfully!
               </span>
             </div>
           )}
@@ -146,7 +146,7 @@ export const SaveSessionModal: React.FC<SaveSessionModalProps> = ({
               ) : (
                 <>
                   <Save className="w-4 h-4" />
-                  Save Session
+                  Save Setup
                 </>
               )}
             </button>
