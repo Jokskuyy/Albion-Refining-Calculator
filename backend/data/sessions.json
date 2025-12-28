@@ -1,1 +1,33 @@
-[]
+[
+  {
+    "id": 1,
+    "sessionName": "Testing",
+    "calculationMode": "equipment",
+    "tier": 4,
+    "returnRate": 24.8,
+    "useFocus": false,
+    "isBonusCity": true,
+    "isRefiningDay": false,
+    "marketTaxPercent": 4,
+    "equipmentId": "cloth_sandals",
+    "equipmentQuantity": 10,
+    "equipmentPrice": 1000,
+    "materialPrices": {
+      "ore": 300,
+      "hide": 250,
+      "fiber": 200,
+      "wood": 150,
+      "stone": 180
+    },
+    "materialType": null,
+    "ownedRawMaterials": null,
+    "ownedLowerTierRefined": null,
+    "rawMaterialPrice": null,
+    "refinedMaterialPrice": null,
+    "lowerTierRefinedPrice": null,
+    "totalProfit": -2600,
+    "profitPerItem": -260,
+    "createdAt": "2025-09-22T06:17:57.012Z",
+    "updatedAt": "2025-09-22T06:17:57.012Z"
+  }
+]
