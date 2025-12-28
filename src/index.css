@@ -1,57 +1,152 @@
 @import "tailwindcss";
 @import "./styles/responsive.css";
 
-/* CSS Custom Properties for Theme System */
+/* Albion Online Theme System */
 :root {
-  --bg-primary: #f8fafc;
-  --bg-secondary: #ffffff;
-  --text-primary: #0f172a;
-  --text-secondary: #334155;
-  --text-muted: #475569;
-  --text-success: #059669;
-  --text-danger: #dc2626;
-  --text-warning: #d97706;
-  --text-info: #0284c7;
-  --border-color: #e2e8f0;
-  --card-bg: rgba(255, 255, 255, 0.95);
-  --input-bg: #ffffff;
-  --input-border: #d1d5db;
-  --accent-color: #3b82f6;
-  --accent-hover: #2563eb;
-  --shadow-color: rgba(0, 0, 0, 0.1);
+  --primary: #17cf54;
+  --primary-dark: #12a341;
+  --primary-light: #22ff66;
+  --primary-glow: rgba(23, 207, 84, 0.15);
+  --danger: #cf3617;
+  --albion-dark: #0b0e0c;
+  --albion-panel: #131a16;
+  --albion-card: #1a241f;
+  --albion-border: #28352d;
+  --albion-border-light: #3a4d41;
+  --albion-text: #e8f5ed;
+  --albion-muted: #9db5a6;
 }
 
-[data-theme="dark"] {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --text-success: #22c55e;
-  --text-danger: #ef4444;
-  --text-warning: #f59e0b;
-  --text-info: #06b6d4;
-  --border-color: #334155;
-  --card-bg: #1e293b;
-  --input-bg: #334155;
-  --input-border: #475569;
-  --accent-color: #3b82f6;
-  --accent-hover: #2563eb;
-  --shadow-color: rgba(0, 0, 0, 0.3);
+.text-primary {
+  color: #17cf54 !important;
+}
+
+.bg-primary {
+  background-color: #17cf54 !important;
+}
+
+.border-primary {
+  border-color: #17cf54 !important;
 }
 
 html {
-  color-scheme: light dark;
+  color-scheme: dark;
 }
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-    sans-serif;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
-  line-height: 1.6;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-family: "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  background-color: var(--albion-dark);
+  color: var(--albion-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--albion-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--albion-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Material Symbols Icon Font */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* Albion Input Styles */
+.albion-input {
+  background-color: #111513;
+  border: 1px solid var(--albion-border);
+  color: var(--albion-text);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.albion-input:hover {
+  border-color: var(--albion-border-light);
+}
+
+.albion-input:focus {
+  background-color: #161e19;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+  outline: none;
+}
+
+/* Tab Button Styles */
+.tab-btn {
+  position: relative;
+}
+
+.tab-btn.active {
+  color: #fff;
+  background-color: var(--albion-card);
+}
+
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--primary);
+  box-shadow: 0 -2px 8px rgba(23, 207, 84, 0.5);
+}
+
+.tab-btn:not(.active) {
+  color: var(--albion-muted);
+}
+
+.tab-btn:not(.active):hover {
+  color: var(--albion-text);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Button Select Styles */
+.btn-select {
+  background: var(--albion-panel);
+  border: 1px solid var(--albion-border);
+  color: var(--albion-muted);
+  transition: all 0.15s ease;
+}
+
+.btn-select:hover {
+  background: var(--albion-card);
+  border-color: var(--albion-border-light);
+  color: var(--albion-text);
+}
+
+.btn-select.active {
+  background: #1f2b24;
+  border-color: var(--primary);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(23, 207, 84, 0.1);
+}
+
+.btn-select.active-tier {
+  background: var(--albion-border);
+  border-color: var(--albion-text);
+  color: #fff;
+}
+
+/* Selection Color */
+::selection {
+  background: var(--primary);
+  color: var(--albion-dark);
 }
 
 .card {

@@ -3,8 +3,6 @@ import {
   TIER_REQUIREMENTS,
   calculateReturnRate,
   FOCUS_COSTS,
-  MATERIAL_NAMES,
-  REFINED_NAMES,
 } from "../constants/gameData";
 
 export interface MultiTierInput {
@@ -240,7 +238,6 @@ interface SingleTierStepInput {
 
 const calculateSingleTierStep = (input: SingleTierStepInput): TierRefiningStep => {
   const {
-    materialType,
     fromTier,
     toTier,
     availableRefined,
