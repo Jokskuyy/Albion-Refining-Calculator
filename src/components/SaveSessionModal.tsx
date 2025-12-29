@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Save, X, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 
 interface SaveSessionModalProps {
@@ -8,7 +8,7 @@ interface SaveSessionModalProps {
   isLoading?: boolean;
 }
 
-export const SaveSessionModal: React.FC<SaveSessionModalProps> = ({
+export const SaveSessionModal: React.FC<SaveSessionModalProps> = React.memo(({
   isOpen,
   onClose,
   onSave,
@@ -18,7 +18,7 @@ export const SaveSessionModal: React.FC<SaveSessionModalProps> = ({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!sessionName.trim()) {
@@ -44,14 +44,19 @@ export const SaveSessionModal: React.FC<SaveSessionModalProps> = ({
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save setup');
     }
-  };
+  }, [sessionName, onSave]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setSessionName('');
     setError('');
     setSuccess(false);
     onClose();
-  };
+  }, [onClose]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSessionName(e.target.value);
+    setError(''); // Clear error when typing
+  }, []);
 
   if (!isOpen) return null;
 
@@ -86,10 +91,7 @@ export const SaveSessionModal: React.FC<SaveSessionModalProps> = ({
               type="text"
               id="sessionName"
               value={sessionName}
-              onChange={(e) => {
-                setSessionName(e.target.value);
-                setError(''); // Clear error when typing
-              }}
+              onChange={handleInputChange}
               placeholder="e.g., T6 Sword Profit, Daily Fiber Refining"
               className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-slate-700 dark:text-white"
               disabled={isLoading || success}
@@ -155,4 +157,6 @@ export const SaveSessionModal: React.FC<SaveSessionModalProps> = ({
       </div>
     </div>
   );
-};
+});
+
+SaveSessionModal.displayName = 'SaveSessionModal';

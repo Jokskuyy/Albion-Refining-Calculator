@@ -1,15 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Calculator,
   TrendingUp,
-  TrendingDown,
-  Settings,
-  Zap,
   Focus,
   Archive,
   Package,
-  Sun,
-  Moon,
   Sparkles,
   Crown,
   Hammer,
@@ -18,11 +13,8 @@ import {
 import type { MaterialType, Tier } from "../constants/gameData";
 import {
   MATERIAL_TYPES,
-  TIER_REQUIREMENTS,
   RETURN_RATES,
   CRAFTING_RETURN_RATES,
-  MATERIAL_NAMES,
-  REFINED_NAMES,
 } from "../constants/gameData";
 import {
   calculateResourceBasedRefining,
@@ -120,16 +112,16 @@ const RefiningCalculatorNew: React.FC = () => {
   }, [isDarkMode]);
 
   // Handler untuk toggle Use Focus dengan logic auto-off untuk bonus city dan refining day
-  const handleUseFocusToggle = (value: boolean) => {
+  const handleUseFocusToggle = useCallback((value: boolean) => {
     setUseFocus(value);
     if (value) {
       setIsBonusCity(false);
       setIsRefiningDay(false);
     }
-  };
+  }, []);
 
   // Handler untuk toggle Bonus City dengan logic auto-off untuk Use Focus
-  const handleBonusCityToggle = (value: boolean) => {
+  const handleBonusCityToggle = useCallback((value: boolean) => {
     setIsBonusCity(value);
     if (value) {
       setUseFocus(false);
@@ -137,15 +129,15 @@ const RefiningCalculatorNew: React.FC = () => {
     if (!value) {
       setIsRefiningDay(false);
     }
-  };
+  }, []);
 
   // Handler untuk toggle Refining Day dengan logic auto-off untuk Use Focus
-  const handleRefiningDayToggle = (value: boolean) => {
+  const handleRefiningDayToggle = useCallback((value: boolean) => {
     setIsRefiningDay(value);
     if (value) {
       setUseFocus(false);
     }
-  };
+  }, []);
 
   // Calculate Result Function
   const calculateResult = () => {
@@ -252,7 +244,7 @@ const RefiningCalculatorNew: React.FC = () => {
   ]);
 
   // Session Management Handlers
-  const handleSaveSession = async (sessionName: string) => {
+  const handleSaveSession = useCallback(async (sessionName: string) => {
     setIsSaving(true);
     try {
       const sessionData: SessionData = {
@@ -289,9 +281,15 @@ const RefiningCalculatorNew: React.FC = () => {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [
+    calculationMode, materialType, tier, selectedEquipmentCategory, selectedEquipment,
+    equipmentQuantity, equipmentPrice, ownedRawMaterials, ownedLowerTierRefined,
+    rawMaterialPrice, refinedMaterialPrice, lowerTierRefinedPrice, startTier, endTier,
+    ownedStartMaterials, multiTierRawMaterials, multiTierRawPrices, multiTierRefinedPrices,
+    materialPrices, isBonusCity, isRefiningDay, useFocus, equipmentResult, resourceResult, multiTierResult
+  ]);
 
-  const handleLoadSession = (session: SessionData) => {
+  const handleLoadSession = useCallback((session: SessionData) => {
     setCalculationMode(session.calculationMode);
     setMaterialType(session.materialType);
     setTier(session.tier);
@@ -315,12 +313,12 @@ const RefiningCalculatorNew: React.FC = () => {
     setIsRefiningDay(session.isRefiningDay);
     setUseFocus(session.useFocus);
     setShowSessions(false);
-  };
+  }, []);
 
-  // Format currency
-  const formatCurrency = (value: number): string => {
+  // Format currency - memoized to prevent recreation
+  const formatCurrency = useCallback((value: number): string => {
     return new Intl.NumberFormat("en-US").format(Math.round(value));
-  };
+  }, []);
 
   // Calculate current result for display
   const currentResult = equipmentResult || resourceResult || multiTierResult;

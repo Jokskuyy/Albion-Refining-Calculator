@@ -17,18 +17,6 @@
   --albion-muted: #9db5a6;
 }
 
-.text-primary {
-  color: #17cf54 !important;
-}
-
-.bg-primary {
-  background-color: #17cf54 !important;
-}
-
-.border-primary {
-  border-color: #17cf54 !important;
-}
-
 html {
   color-scheme: dark;
 }
@@ -243,33 +231,17 @@ body {
   transform: translateX(1.625rem);
 }
 
-/* Text utility classes for better readability */
+/* Text utility classes - using CSS variables for theme support */
 .text-primary {
-  color: var(--text-primary);
+  color: #17cf54 !important;
 }
 
-.text-secondary {
-  color: var(--text-secondary);
+.bg-primary {
+  background-color: #17cf54 !important;
 }
 
-.text-muted {
-  color: var(--text-muted);
-}
-
-.text-success {
-  color: var(--text-success);
-}
-
-.text-danger {
-  color: var(--text-danger);
-}
-
-.text-warning {
-  color: var(--text-warning);
-}
-
-.text-info {
-  color: var(--text-info);
+.border-primary {
+  border-color: #17cf54 !important;
 }
 
 /* Enhanced card content styling */
@@ -344,46 +316,4 @@ body {
   color: var(--text-info);
 }
 
-/* Animation classes */
-.animate-fade-in {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-.animate-slide-up {
-  animation: slideUp 0.3s ease-out;
-}
-
-.animate-scale-in {
-  animation: scaleIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes scaleIn {
-  from {
-    transform: scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
+/* Animations - defined in tailwind.config.js, removing duplicates */
