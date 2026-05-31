@@ -93,6 +93,11 @@ const RefiningCalculatorNew: React.FC = () => {
   const [marketTaxPercent] = useState<number>(4);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
+  // Player Specialization State
+  const [masteryLevel, setMasteryLevel] = useState<number>(100);
+  const [tierSpecLevel, setTierSpecLevel] = useState<number>(100);
+  const [otherSpecsTotal, setOtherSpecsTotal] = useState<number>(400);
+
   // Session Management State
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -156,6 +161,9 @@ const RefiningCalculatorNew: React.FC = () => {
             ? CRAFTING_RETURN_RATES.bonusCityWithRefiningDay
             : CRAFTING_RETURN_RATES.bonusCity
           : CRAFTING_RETURN_RATES.nonBonusCity,
+        masteryLevel,
+        tierSpecLevel,
+        otherSpecsTotal,
         useFocus,
         marketTaxPercent,
         stationFeePercent: 4.5,
@@ -180,9 +188,11 @@ const RefiningCalculatorNew: React.FC = () => {
             ? RETURN_RATES.bonusCityWithRefiningDay
             : RETURN_RATES.bonusCity
           : RETURN_RATES.nonBonusCity,
+        masteryLevel,
+        tierSpecLevel,
+        otherSpecsTotal,
         useFocus,
         marketTaxPercent,
-        masteryLevel: 0,
         stationFeePercent: 4.5,
         isPremium: false,
       };
@@ -205,8 +215,13 @@ const RefiningCalculatorNew: React.FC = () => {
             ? RETURN_RATES.bonusCityWithRefiningDay
             : RETURN_RATES.bonusCity
           : RETURN_RATES.nonBonusCity,
+        masteryLevel,
+        tierSpecLevel,
+        otherSpecsTotal,
         useFocus,
         marketTaxPercent,
+        stationFeePercent: 4.5,
+        isPremium: false,
       };
 
       const result = calculateMultiTierRefining(input);
@@ -241,6 +256,9 @@ const RefiningCalculatorNew: React.FC = () => {
     isBonusCity,
     isRefiningDay,
     useFocus,
+    masteryLevel,
+    tierSpecLevel,
+    otherSpecsTotal,
   ]);
 
   // Session Management Handlers
@@ -248,7 +266,7 @@ const RefiningCalculatorNew: React.FC = () => {
     setIsSaving(true);
     try {
       const sessionData: SessionData = {
-        name: sessionName,
+        sessionName,
         calculationMode,
         materialType,
         tier,
@@ -271,6 +289,9 @@ const RefiningCalculatorNew: React.FC = () => {
         isBonusCity,
         isRefiningDay,
         useFocus,
+        masteryLevel,
+        tierSpecLevel,
+        otherSpecsTotal,
         result: equipmentResult || resourceResult || multiTierResult || null,
       };
 
@@ -286,7 +307,7 @@ const RefiningCalculatorNew: React.FC = () => {
     equipmentQuantity, equipmentPrice, ownedRawMaterials, ownedLowerTierRefined,
     rawMaterialPrice, refinedMaterialPrice, lowerTierRefinedPrice, startTier, endTier,
     ownedStartMaterials, multiTierRawMaterials, multiTierRawPrices, multiTierRefinedPrices,
-    materialPrices, isBonusCity, isRefiningDay, useFocus, equipmentResult, resourceResult, multiTierResult
+    materialPrices, isBonusCity, isRefiningDay, useFocus, masteryLevel, tierSpecLevel, otherSpecsTotal, equipmentResult, resourceResult, multiTierResult
   ]);
 
   const handleLoadSession = useCallback((session: SessionData) => {
@@ -312,6 +333,9 @@ const RefiningCalculatorNew: React.FC = () => {
     setIsBonusCity(session.isBonusCity);
     setIsRefiningDay(session.isRefiningDay);
     setUseFocus(session.useFocus);
+    if (session.masteryLevel !== undefined) setMasteryLevel(session.masteryLevel);
+    if (session.tierSpecLevel !== undefined) setTierSpecLevel(session.tierSpecLevel);
+    if (session.otherSpecsTotal !== undefined) setOtherSpecsTotal(session.otherSpecsTotal);
     setShowSessions(false);
   }, []);
 
@@ -749,6 +773,57 @@ const RefiningCalculatorNew: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Player Specialization Card */}
+                <div className="bg-albion-panel rounded-xl border border-albion-border overflow-hidden shadow-lg shadow-black/20 mb-6">
+                  <div className="bg-albion-card/30 px-6 py-4 border-b border-albion-border flex justify-between items-center backdrop-blur-md">
+                    <h3 className="text-white font-display font-semibold flex items-center gap-2.5">
+                      <span className="material-symbols-outlined text-primary text-[20px]">psychology</span>
+                      Player Specialization
+                    </h3>
+                  </div>
+                  <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
+                        Mastery Level (0-100)
+                      </label>
+                      <input
+                        type="number"
+                        value={masteryLevel}
+                        onChange={(e) => setMasteryLevel(Math.min(100, Math.max(0, Number(e.target.value))))}
+                        className="albion-input h-12 px-4 rounded-lg text-right font-mono"
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
+                        Tier Spec Level (0-100)
+                      </label>
+                      <input
+                        type="number"
+                        value={tierSpecLevel}
+                        onChange={(e) => setTierSpecLevel(Math.min(100, Math.max(0, Number(e.target.value))))}
+                        className="albion-input h-12 px-4 rounded-lg text-right font-mono"
+                        min="0"
+                        max="100"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
+                        Other Specs Total (0-400)
+                      </label>
+                      <input
+                        type="number"
+                        value={otherSpecsTotal}
+                        onChange={(e) => setOtherSpecsTotal(Math.min(400, Math.max(0, Number(e.target.value))))}
+                        className="albion-input h-12 px-4 rounded-lg text-right font-mono"
+                        min="0"
+                        max="400"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Bonuses & Settings Card */}
                 <div className="bg-albion-panel rounded-xl border border-albion-border overflow-hidden shadow-lg shadow-black/20 mb-10">
                   <div className="bg-albion-card/30 px-6 py-4 border-b border-albion-border flex justify-between items-center backdrop-blur-md">
@@ -846,7 +921,7 @@ const RefiningCalculatorNew: React.FC = () => {
                         {totalProfit >= 0 ? "+" : ""}
                         {formatCurrency(totalProfit)}
                       </div>
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
                         <span className="text-xs text-albion-muted">Profit Margin:</span>
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -857,6 +932,14 @@ const RefiningCalculatorNew: React.FC = () => {
                         >
                           {profitMargin.toFixed(2)}%
                         </span>
+                        {useFocus && currentResult && 'profitPerFocus' in currentResult && currentResult.profitPerFocus > 0 && (
+                          <>
+                            <span className="text-xs text-albion-muted ml-2">Silver / Focus:</span>
+                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                              {formatCurrency(currentResult.profitPerFocus)}
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

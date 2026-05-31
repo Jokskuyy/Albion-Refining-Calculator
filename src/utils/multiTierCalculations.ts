@@ -2,7 +2,7 @@ import type { MaterialType, Tier } from "../constants/gameData";
 import {
   TIER_REQUIREMENTS,
   calculateReturnRate,
-  FOCUS_COSTS,
+  calculateFocusCost,
 } from "../constants/gameData";
 
 export interface MultiTierInput {
@@ -17,6 +17,8 @@ export interface MultiTierInput {
   };
   returnRate: number;
   masteryLevel: number;
+  tierSpecLevel: number;
+  otherSpecsTotal: number;
   useFocus: boolean;
   stationFeePercent: number;
   marketTaxPercent: number;
@@ -100,6 +102,8 @@ export const calculateMultiTierRefining = (
     materialPrices,
     returnRate,
     masteryLevel,
+    tierSpecLevel,
+    otherSpecsTotal,
     useFocus,
     stationFeePercent,
     marketTaxPercent,
@@ -151,6 +155,8 @@ export const calculateMultiTierRefining = (
       refinedPriceTo: materialPrices.refined[toTier],
       returnRate,
       masteryLevel,
+      tierSpecLevel,
+      otherSpecsTotal,
       useFocus,
       stationFeePercent,
       isPremium,
@@ -231,6 +237,8 @@ interface SingleTierStepInput {
   refinedPriceTo: number;
   returnRate: number;
   masteryLevel: number;
+  tierSpecLevel: number;
+  otherSpecsTotal: number;
   useFocus: boolean;
   stationFeePercent: number;
   isPremium: boolean;
@@ -247,101 +255,99 @@ const calculateSingleTierStep = (input: SingleTierStepInput): TierRefiningStep =
     refinedPriceTo,
     returnRate,
     masteryLevel,
+    tierSpecLevel,
+    otherSpecsTotal,
     useFocus,
     stationFeePercent,
     isPremium,
   } = input;
 
   const requirements = TIER_REQUIREMENTS[toTier];
-  const focusCostPerCraft = FOCUS_COSTS[toTier] || 0;
+  const focusCostPerCraft = useFocus ? calculateFocusCost(toTier, masteryLevel, tierSpecLevel, otherSpecsTotal) : 0;
 
   // Calculate effective return rate
-  const effectiveReturnRate = calculateReturnRate(returnRate, masteryLevel, useFocus);
+  const effectiveReturnRate = calculateReturnRate(returnRate, useFocus);
 
-  // Calculate maximum crafts possible
-  const maxCraftsFromRaw = Math.floor(availableRaw / requirements.raw);
-  const maxCraftsFromRefined = Math.floor(availableRefined / requirements.refined);
-  const maxCrafts = Math.min(maxCraftsFromRaw, maxCraftsFromRefined);
+  // Iterative refining simulation
+  let currentRaw = availableRaw;
+  let currentRefined = availableRefined;
+  
+  let totalRefinedProduced = 0;
+  let totalRawUsed = 0;
+  let totalRefinedUsed = 0;
+  let totalRawReturned = 0;
+  let totalRefinedReturned = 0;
+  let iterations = 0;
+  const maxIterations = 1000;
 
-  if (maxCrafts === 0) {
-    // Can't craft anything
-    return {
-      fromTier,
-      toTier,
-      startingRefined: availableRefined,
-      rawMaterialsUsed: 0,
-      lowerTierRefinedUsed: 0,
-      refinedProduced: 0,
-      rawMaterialsReturned: 0,
-      lowerTierRefinedReturned: 0,
-      rawMaterialCost: 0,
-      lowerTierRefinedCost: 0,
-      totalInputCost: 0,
-      returnedMaterialsValue: 0,
-      netCost: 0,
-      outputValue: 0,
-      stepProfit: 0,
-      focusUsed: 0,
-      stationFee: 0,
-      iterations: 1,
-      effectiveReturnRate,
-    };
+  while (iterations < maxIterations) {
+    const maxCraftsFromRaw = Math.floor(currentRaw / requirements.raw);
+    const maxCraftsFromRefined = toTier > 2 ? Math.floor(currentRefined / requirements.refined) : Infinity;
+    const craftsThisIteration = Math.min(maxCraftsFromRaw, maxCraftsFromRefined);
+
+    if (craftsThisIteration === 0) break;
+
+    const rawUsedThisIteration = craftsThisIteration * requirements.raw;
+    const refinedUsedThisIteration = toTier > 2 ? craftsThisIteration * requirements.refined : 0;
+
+    const rawReturnedThisIteration = Math.floor(rawUsedThisIteration * (effectiveReturnRate / 100));
+    const refinedReturnedThisIteration = Math.floor(refinedUsedThisIteration * (effectiveReturnRate / 100));
+
+    currentRaw = currentRaw - rawUsedThisIteration + rawReturnedThisIteration;
+    currentRefined = currentRefined - refinedUsedThisIteration + refinedReturnedThisIteration;
+
+    totalRefinedProduced += craftsThisIteration;
+    totalRawUsed += rawUsedThisIteration;
+    totalRefinedUsed += refinedUsedThisIteration;
+    totalRawReturned += rawReturnedThisIteration;
+    totalRefinedReturned += refinedReturnedThisIteration;
+
+    iterations++;
   }
 
-  // Calculate materials used
-  const rawMaterialsUsed = maxCrafts * requirements.raw;
-  const lowerTierRefinedUsed = maxCrafts * requirements.refined;
-
-  // Calculate materials returned
-  const rawMaterialsReturned = Math.floor(rawMaterialsUsed * (effectiveReturnRate / 100));
-  const lowerTierRefinedReturned = Math.floor(lowerTierRefinedUsed * (effectiveReturnRate / 100));
-
-  // Calculate materials produced
-  const refinedProduced = maxCrafts;
-
   // Calculate costs
-  const rawMaterialCost = rawMaterialsUsed * rawPrice;
-  const lowerTierRefinedCost = lowerTierRefinedUsed * refinedPriceFrom;
-  const totalInputCost = rawMaterialCost + lowerTierRefinedCost;
+  const rawMaterialCostGross = totalRawUsed * rawPrice;
+  const lowerTierRefinedCostGross = totalRefinedUsed * refinedPriceFrom;
+  const totalInputCostGross = rawMaterialCostGross + lowerTierRefinedCostGross;
 
-  // Calculate returned materials value
-  const returnedMaterialsValue = 
-    (rawMaterialsReturned * rawPrice) + 
-    (lowerTierRefinedReturned * refinedPriceFrom);
+  // Calculate returned materials value (total across all iterations)
+  const totalReturnedValueAllIterations = 
+    (totalRawReturned * rawPrice) + 
+    (totalRefinedReturned * refinedPriceFrom);
 
-  // Calculate station fee
-  const baseStationFee = totalInputCost * (stationFeePercent / 100);
+  // Calculate station fee (based on gross input)
+  const baseStationFee = totalInputCostGross * (stationFeePercent / 100);
   const stationFee = isPremium ? baseStationFee * 0.5 : baseStationFee;
 
   // Calculate net cost and output value
-  const netCost = totalInputCost - returnedMaterialsValue + stationFee;
-  const outputValue = refinedProduced * refinedPriceTo;
+  const stepNetCost = totalInputCostGross - totalReturnedValueAllIterations + stationFee;
+  const outputValue = totalRefinedProduced * refinedPriceTo;
 
   // Calculate step profit
-  const stepProfit = outputValue - netCost;
+  const stepProfit = outputValue - stepNetCost;
 
   // Calculate focus used
-  const focusUsed = useFocus ? maxCrafts * focusCostPerCraft : 0;
+  const focusUsed = useFocus ? totalRefinedProduced * focusCostPerCraft : 0;
 
   return {
     fromTier,
     toTier,
     startingRefined: availableRefined,
-    rawMaterialsUsed,
-    lowerTierRefinedUsed,
-    refinedProduced,
-    rawMaterialsReturned,
-    lowerTierRefinedReturned,
-    rawMaterialCost,
-    lowerTierRefinedCost,
-    totalInputCost,
-    returnedMaterialsValue,
-    netCost,
+    rawMaterialsUsed: totalRawUsed,
+    lowerTierRefinedUsed: totalRefinedUsed,
+    refinedProduced: totalRefinedProduced,
+    rawMaterialsReturned: totalRawReturned,
+    lowerTierRefinedReturned: totalRefinedReturned,
+    rawMaterialCost: rawMaterialCostGross,
+    lowerTierRefinedCost: lowerTierRefinedCostGross,
+    totalInputCost: totalInputCostGross,
+    returnedMaterialsValue: totalReturnedValueAllIterations,
+    netCost: stepNetCost,
     outputValue,
     stepProfit,
     focusUsed,
     stationFee,
-    iterations: 1,
+    iterations: iterations || 1,
     effectiveReturnRate,
   };
 };

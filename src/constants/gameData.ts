@@ -46,36 +46,51 @@ export const CRAFTING_RETURN_RATES = {
   nonBonusCity: 15.2, // Normal crafting without royal city bonus
 } as const;
 
-// Focus costs per tier (at max specialization)
-export const FOCUS_COSTS = {
-  2: 10,
-  3: 24,
-  4: 3,
-  5: 6,
-  6: 10,
-  7: 18,
-  8: 31,
+// Base focus costs per tier (for refining 1 unit without mastery/spec)
+export const BASE_FOCUS_COSTS = {
+  2: 0,
+  3: 0,
+  4: 74,
+  5: 148,
+  6: 296,
+  7: 592,
+  8: 1184,
 } as const;
-
-// Mastery bonuses (additional return rate per 20 mastery levels)
-export const MASTERY_BONUS_PER_20_LEVELS = 4.0; // 4% per 20 mastery levels
-
-// Calculate mastery bonus
-export const calculateMasteryBonus = (masteryLevel: number): number => {
-  return Math.floor(masteryLevel / 20) * MASTERY_BONUS_PER_20_LEVELS;
-};
 
 // Calculate total return rate
 export const calculateReturnRate = (
   baseReturnRate: number,
-  masteryLevel: number,
   useFocus: boolean
 ): number => {
   if (useFocus) {
-    return 53.9; // Fixed focus return rate
+    if (baseReturnRate >= 46.7) return 57.9; // Bonus city + Refining Day
+    if (baseReturnRate >= 36.7) return 53.9; // Bonus city
+    if (baseReturnRate >= 25.2) return 53.5; // Non-bonus city + Refining Day
+    return 43.5; // Non-bonus city
   }
-  const masteryBonus = calculateMasteryBonus(masteryLevel);
-  return baseReturnRate + masteryBonus;
+  return baseReturnRate;
+};
+
+/**
+ * Calculate the actual focus cost using exponential reduction formula.
+ * E = (Mastery * 30) + (TierSpec * 250) + (OtherSpecsTotal * 100)
+ * Cost = BaseCost * 0.5 ^ (E / 10000)
+ */
+export const calculateFocusCost = (
+  tier: Tier,
+  masteryLevel: number,
+  tierSpecLevel: number,
+  otherSpecsTotal: number
+): number => {
+  if (tier < 4) return 0;
+  
+  const baseCost = BASE_FOCUS_COSTS[tier as keyof typeof BASE_FOCUS_COSTS] || 0;
+  if (baseCost === 0) return 0;
+
+  const totalEfficiency = (masteryLevel * 30) + (tierSpecLevel * 250) + (otherSpecsTotal * 100);
+  const cost = baseCost * Math.pow(0.5, totalEfficiency / 10000);
+  
+  return Math.max(1, Math.floor(cost));
 };
 
 // Material names by tier

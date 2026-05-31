@@ -2,7 +2,7 @@ import type { MaterialType, Tier } from "../constants/gameData";
 import {
   TIER_REQUIREMENTS,
   calculateReturnRate,
-  FOCUS_COSTS,
+  calculateFocusCost,
 } from "../constants/gameData";
 
 export interface ResourceBasedInput {
@@ -15,6 +15,8 @@ export interface ResourceBasedInput {
   lowerTierRefinedPrice: number;
   returnRate: number;
   masteryLevel: number;
+  tierSpecLevel: number;
+  otherSpecsTotal: number;
   useFocus: boolean;
   stationFeePercent: number;
   marketTaxPercent: number;
@@ -61,6 +63,7 @@ export interface ResourceBasedResult {
 
   // Rates
   effectiveReturnRate: number;
+  profitPerFocus: number;
 }
 
 export const calculateResourceBasedRefining = (
@@ -75,18 +78,19 @@ export const calculateResourceBasedRefining = (
     lowerTierRefinedPrice,
     returnRate,
     masteryLevel,
+    tierSpecLevel,
+    otherSpecsTotal,
     useFocus,
     stationFeePercent,
     isPremium,
   } = input;
 
   const requirements = TIER_REQUIREMENTS[tier];
-  const focusCostPerCraft = FOCUS_COSTS[tier] || 0;
+  const focusCostPerCraft = useFocus ? calculateFocusCost(tier, masteryLevel, tierSpecLevel, otherSpecsTotal) : 0;
 
-  // Calculate effective return rate with mastery and focus
+  // Calculate effective return rate
   const effectiveReturnRate = calculateReturnRate(
     returnRate,
-    masteryLevel,
     useFocus
   );
 
@@ -193,6 +197,9 @@ export const calculateResourceBasedRefining = (
   const profitPerUnit =
     totalRefinedProduced > 0 ? netProfit / totalRefinedProduced : 0;
 
+  const focusUsed = useFocus ? totalRefinedProduced * focusCostPerCraft : 0;
+  const profitPerFocus = focusUsed > 0 ? netProfit / focusUsed : 0;
+
   return {
     refinementsMade: totalRefinedProduced,
     actualRefinedOutput: totalRefinedProduced,
@@ -223,7 +230,8 @@ export const calculateResourceBasedRefining = (
     profitMargin,
     profitPerUnit,
 
-    focusUsed: useFocus ? totalRefinedProduced * focusCostPerCraft : 0,
+    focusUsed,
     effectiveReturnRate,
+    profitPerFocus,
   };
 };

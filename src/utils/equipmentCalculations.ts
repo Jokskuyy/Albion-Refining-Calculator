@@ -9,6 +9,9 @@ export interface EquipmentCraftingInput {
   materialPrices: Record<MaterialType, number>; // Price per refined material
   equipmentPrice: number; // Selling price of the equipment
   returnRate: number;
+  masteryLevel: number;
+  tierSpecLevel: number;
+  otherSpecsTotal: number;
   useFocus: boolean;
   stationFeePercent: number;
   marketTaxPercent: number;
@@ -72,6 +75,9 @@ export const calculateEquipmentCrafting = (
     materialPrices,
     equipmentPrice,
     returnRate,
+    masteryLevel,
+    tierSpecLevel,
+    otherSpecsTotal,
     useFocus,
     stationFeePercent,
     marketTaxPercent,
@@ -124,8 +130,14 @@ export const calculateEquipmentCrafting = (
   const baseMarketTax = totalRevenue * (marketTaxPercent / 100);
   const marketTax = isPremium ? baseMarketTax * 0.5 : baseMarketTax;
 
-  // Focus cost calculation (simplified - using tier 4 as base)
-  const focusCostPerItem = useFocus ? (equipment.focusCost || 3) : 0;
+  // Focus cost calculation using exponential reduction
+  let focusCostPerItem = 0;
+  if (useFocus) {
+    const baseCost = equipment.focusCost || 0;
+    const totalEfficiency = (masteryLevel * 30) + (tierSpecLevel * 250) + (otherSpecsTotal * 100);
+    const cost = baseCost * Math.pow(0.5, totalEfficiency / 10000);
+    focusCostPerItem = Math.max(1, Math.floor(cost));
+  }
   const focusCost = focusCostPerItem * quantity;
 
   // Total costs
@@ -136,7 +148,7 @@ export const calculateEquipmentCrafting = (
   const netProfit = totalRevenue - totalCost;
   const profitPerUnit = netProfit / quantity;
   const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0;
-  const profitPerFocus = useFocus && focusCostPerItem > 0 ? netProfit / (focusCost / focusCostPerItem) : 0;
+  const profitPerFocus = focusCost > 0 ? netProfit / focusCost : 0;
 
   return {
     equipmentName: equipment.name,

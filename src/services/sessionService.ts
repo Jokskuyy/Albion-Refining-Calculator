@@ -4,40 +4,31 @@ export interface SessionData {
   id?: number;
   sessionName: string;
   calculationMode: 'equipment' | 'resources' | 'multi-tier';
+  materialType: string;
   tier: number;
-  returnRate: number;
-  useFocus: boolean;
-  isBonusCity: boolean;
-  isRefiningDay: boolean;
-  marketTaxPercent: number;
-  
-  // Equipment specific
-  equipmentId?: string;
+  selectedEquipmentCategory?: string;
+  selectedEquipment?: string;
   equipmentQuantity?: number;
   equipmentPrice?: number;
-  materialPrices?: Record<string, number>;
-  
-  // Resource specific
-  materialType?: string;
   ownedRawMaterials?: number;
   ownedLowerTierRefined?: number;
   rawMaterialPrice?: number;
   refinedMaterialPrice?: number;
   lowerTierRefinedPrice?: number;
-  
-  // Multi-tier specific
   startTier?: number;
   endTier?: number;
   ownedStartMaterials?: number;
   multiTierRawMaterials?: Record<number, number>;
   multiTierRawPrices?: Record<number, number>;
   multiTierRefinedPrices?: Record<number, number>;
-  
-  // Results
-  totalProfit?: number;
-  profitPerItem?: number;
-  
-  // Metadata
+  materialPrices?: Record<string, number>;
+  isBonusCity: boolean;
+  isRefiningDay: boolean;
+  useFocus: boolean;
+  masteryLevel?: number;
+  tierSpecLevel?: number;
+  otherSpecsTotal?: number;
+  result?: any;
   createdAt?: string;
   updatedAt?: string;
 }
