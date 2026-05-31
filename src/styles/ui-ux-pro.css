@@ -1,0 +1,50 @@
+/* UI-UX Pro Max Additions */
+
+/* Glassmorphism utility enhancements */
+.glass-panel {
+  background: rgba(19, 26, 22, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(23, 207, 84, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Accessible focus states (WCAG) */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Touch targets enforcement */
+button, 
+input, 
+select {
+  min-height: 44px;
+}
+
+/* Micro-animations */
+button {
+  transition: transform 150ms cubic-bezier(0.4, 0, 0.2, 1), 
+              background-color 150ms ease,
+              border-color 150ms ease,
+              box-shadow 150ms ease;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+/* Bento Grid padding adjustments */
+.bento-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* Hide scrollbar for clean UI but allow scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

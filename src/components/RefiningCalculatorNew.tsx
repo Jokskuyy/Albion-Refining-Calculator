@@ -1,3 +1,9 @@
+import EquipmentMode from './calculator/EquipmentMode';
+import ResourceMode from './calculator/ResourceMode';
+import MultiTierMode from './calculator/MultiTierMode';
+import PlayerSpecConfig from './calculator/PlayerSpecConfig';
+import EfficiencyBonuses from './calculator/EfficiencyBonuses';
+import ResultsDisplay from './calculator/ResultsDisplay';
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Calculator,
@@ -359,772 +365,128 @@ const RefiningCalculatorNew: React.FC = () => {
 
   return (
     <>
-      {/* Background Pattern */}
       <div className="absolute inset-0 z-0 pointer-events-none opacity-[0.02]" style={{backgroundImage: "url('data:image/svg+xml,%3Csvg width=\\'60\\' height=\\'60\\' viewBox=\\'0 0 60 60\\' xmlns=\\'http://www.w3.org/2000/svg\\'%3E%3Cg fill=\\'none\\' fill-rule=\\'evenodd\\'%3E%3Cg fill=\\'%23ffffff\\' fill-opacity=\\'1\\'%3E%3Cpath d=\\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"}}>
       </div>
 
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-        {/* LEFT PANEL - Workshop Configuration (58-62%) */}
-        <section className="relative z-10 w-full lg:w-[58%] xl:w-[62%] flex flex-col h-full overflow-y-auto border-r border-albion-border bg-albion-dark/95 backdrop-blur-sm shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
-          <div className="max-w-5xl mx-auto w-full p-6 lg:p-10 space-y-8">
-            
-            {/* Page Header */}
-            <div className="pb-2 border-b border-albion-border/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-display font-bold text-white mb-1 flex items-center gap-3">
-                  <span className="w-1.5 h-6 bg-primary rounded-full"></span>
-                  Workshop Configuration
-                </h2>
-                <p className="text-albion-muted text-sm pl-4.5">Configure crafting parameters, market rates, and bonuses.</p>
-              </div>
-              
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowSessions(!showSessions)}
-                  className={`px-3 py-2 ${showSessions 
-                    ? 'bg-primary text-albion-dark' 
-                    : 'bg-albion-panel border border-albion-border text-albion-muted hover:text-white'
-                  } rounded-lg transition-all flex items-center gap-2 text-sm font-medium`}
-                >
-                  <Archive className="w-4 h-4" />
-                  <span className="hidden md:inline">{showSessions ? 'Hide' : 'Saved'}</span>
-                </button>
-
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="px-3 py-2 bg-primary hover:bg-primary-dark text-albion-dark rounded-lg transition-all flex items-center gap-2 text-sm font-medium shadow-[0_0_15px_rgba(23,207,84,0.3)]"
-                  disabled={!hasResult}
-                >
-                  <Save className="w-4 h-4" />
-                  <span className="hidden md:inline">Save</span>
-                </button>
-              </div>
+        <section className="relative z-10 w-full lg:w-[60%] flex flex-col h-full overflow-y-auto border-r border-albion-border bg-albion-dark/95 backdrop-blur-sm p-6 lg:p-10 space-y-8">
+          
+          <div className="pb-2 border-b border-albion-border/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-display font-bold text-white mb-1 flex items-center gap-3">
+                <span className="w-1.5 h-6 bg-primary rounded-full"></span>
+                Workshop Configuration
+              </h2>
             </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowSessions(!showSessions)}
+                className={`px-3 py-2 ${showSessions ? 'bg-primary text-albion-dark' : 'bg-albion-panel border border-albion-border text-albion-muted hover:text-white'} rounded-lg transition-all flex items-center gap-2 text-sm font-medium`}
+              >
+                <Archive className="w-4 h-4" />
+                <span className="hidden md:inline">{showSessions ? 'Hide' : 'Saved'}</span>
+              </button>
 
-            {showSessions ? (
-              // Sessions View
-              <div className="mb-8">
-                <SessionsList 
-                  onLoadSession={handleLoadSession}
-                  calculationMode={calculationMode}
-                />
-              </div>
-            ) : (
-              <>
-                {/* Calculation Mode Selection Card */}
-                <div className="bg-albion-panel rounded-xl border border-albion-border overflow-hidden shadow-lg shadow-black/20">
-                  <div className="bg-albion-card/30 px-6 py-4 border-b border-albion-border flex justify-between items-center backdrop-blur-md">
-                    <h3 className="text-white font-display font-semibold flex items-center gap-2.5">
-                      <span className="material-symbols-outlined text-primary text-[20px]">category</span>
-                      Calculation Mode
-                    </h3>
-                  </div>
-                  <div className="p-6">
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <button
-                        onClick={() => setCalculationMode("equipment")}
-                        className={`flex-1 p-4 rounded-lg border transition-all ${
-                          calculationMode === "equipment"
-                            ? "bg-albion-card border-primary text-white shadow-[0_0_15px_rgba(23,207,84,0.2)]"
-                            : "bg-albion-panel border-albion-border text-albion-muted hover:border-albion-border-light hover:text-white"
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <Hammer className="w-5 h-5 mt-0.5" />
-                          <div className="text-left">
-                            <div className="font-semibold mb-1">Equipment Crafting</div>
-                            <div className="text-xs text-albion-muted">
-                              Calculate profits from crafting gear
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => setCalculationMode("resources")}
-                        className={`flex-1 p-4 rounded-lg border transition-all ${
-                          calculationMode === "resources"
-                            ? "bg-albion-card border-primary text-white shadow-[0_0_15px_rgba(23,207,84,0.2)]"
-                            : "bg-albion-panel border-albion-border text-albion-muted hover:border-albion-border-light hover:text-white"
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <Package className="w-5 h-5 mt-0.5" />
-                          <div className="text-left">
-                            <div className="font-semibold mb-1">Material Refining</div>
-                            <div className="text-xs text-albion-muted">
-                              Calculate refining profits
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => setCalculationMode("multi-tier")}
-                        className={`flex-1 p-4 rounded-lg border transition-all ${
-                          calculationMode === "multi-tier"
-                            ? "bg-albion-card border-primary text-white shadow-[0_0_15px_rgba(23,207,84,0.2)]"
-                            : "bg-albion-panel border-albion-border text-albion-muted hover:border-albion-border-light hover:text-white"
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <TrendingUp className="w-5 h-5 mt-0.5" />
-                          <div className="text-left">
-                            <div className="font-semibold mb-1">Multi-Tier</div>
-                            <div className="text-xs text-albion-muted">
-                              Refine through tiers
-                            </div>
-                          </div>
-                        </div>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Configuration Card - Item Details */}
-                <div className="bg-albion-panel rounded-xl border border-albion-border overflow-hidden shadow-lg shadow-black/20">
-                  <div className="bg-albion-card/30 px-6 py-4 border-b border-albion-border flex justify-between items-center backdrop-blur-md">
-                    <h3 className="text-white font-display font-semibold flex items-center gap-2.5">
-                      <span className="material-symbols-outlined text-primary text-[20px]">settings</span>
-                      Item Details
-                    </h3>
-                  </div>
-                  <div className="p-6 space-y-6">
-                    {calculationMode === "equipment" ? (
-                      <>
-                        {/* Equipment Selection */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="flex flex-col gap-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                              Equipment Category
-                            </label>
-                            <select
-                              value={selectedEquipmentCategory}
-                              onChange={(e) => {
-                                setSelectedEquipmentCategory(e.target.value as EquipmentCategory);
-                                const equipments = getEquipmentsByCategory(e.target.value as EquipmentCategory);
-                                if (equipments.length > 0) {
-                                  setSelectedEquipment(equipments[0].id);
-                                }
-                              }}
-                              className="albion-input h-12 pl-4 pr-10 rounded-lg appearance-none text-sm font-medium cursor-pointer"
-                            >
-                              {Object.entries(EQUIPMENT_CATEGORIES).map(([key, label]) => (
-                                <option key={key} value={key}>
-                                  {label.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div className="flex flex-col gap-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                              Select Item
-                            </label>
-                            <select
-                              value={selectedEquipment}
-                              onChange={(e) => setSelectedEquipment(e.target.value)}
-                              className="albion-input h-12 pl-4 pr-10 rounded-lg appearance-none text-sm font-medium cursor-pointer"
-                            >
-                              {getEquipmentsByCategory(selectedEquipmentCategory).map((eq) => (
-                                <option key={eq.id} value={eq.id}>
-                                  {eq.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-
-                        {/* Tier and Enchantment */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                          <div className="flex flex-col gap-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">Tier</label>
-                            <div className="flex bg-[#0f1411] rounded-lg p-1 border border-albion-border gap-1">
-                              {([4, 5, 6, 7, 8] as Tier[]).map((t) => (
-                                <button
-                                  key={t}
-                                  onClick={() => setTier(t)}
-                                  className={`flex-1 py-2 text-sm font-medium rounded transition-all ${
-                                    tier === t
-                                      ? "bg-albion-border border-albion-text text-white"
-                                      : "bg-albion-panel border-albion-border text-albion-muted hover:bg-albion-card hover:text-white"
-                                  }`}
-                                >
-                                  T{t}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col gap-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">Quantity</label>
-                            <input
-                              type="number"
-                              value={equipmentQuantity}
-                              onChange={(e) => setEquipmentQuantity(Number(e.target.value))}
-                              className="albion-input h-12 px-4 rounded-lg text-right font-mono"
-                              min="1"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Equipment Price */}
-                        <div className="flex flex-col gap-2">
-                          <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                            Sell Price per Item
-                          </label>
-                          <div className="relative">
-                            <input
-                              type="number"
-                              value={equipmentPrice}
-                              onChange={(e) => setEquipmentPrice(Number(e.target.value))}
-                              className="albion-input w-full h-12 pl-4 pr-16 rounded-lg text-right font-mono"
-                            />
-                            <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                              <span className="text-albion-muted text-xs font-bold uppercase">Silver</span>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    ) : calculationMode === "resources" ? (
-                      <>
-                        {/* Material Type Selection */}
-                        <div className="flex flex-col gap-2">
-                          <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                            Material Type
-                          </label>
-                          <div className="grid grid-cols-5 gap-2">
-                            {(Object.keys(MATERIAL_TYPES) as MaterialType[]).map((mat) => (
-                              <button
-                                key={mat}
-                                onClick={() => setMaterialType(mat)}
-                                className={`p-3 rounded-lg border transition-all capitalize ${
-                                  materialType === mat
-                                    ? "bg-albion-card border-primary text-white shadow-[0_0_10px_rgba(23,207,84,0.1)]"
-                                    : "bg-albion-panel border-albion-border text-albion-muted hover:border-albion-border-light hover:text-white"
-                                }`}
-                              >
-                                {mat}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Tier Selection */}
-                        <div className="flex flex-col gap-2">
-                          <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">Tier</label>
-                          <div className="flex bg-[#0f1411] rounded-lg p-1 border border-albion-border gap-1">
-                            {([4, 5, 6, 7, 8] as Tier[]).map((t) => (
-                              <button
-                                key={t}
-                                onClick={() => setTier(t)}
-                                className={`flex-1 py-2 text-sm font-medium rounded transition-all ${
-                                  tier === t
-                                    ? "bg-albion-border border-albion-text text-white"
-                                    : "bg-albion-panel border-albion-border text-albion-muted hover:bg-albion-card hover:text-white"
-                                }`}
-                              >
-                                T{t}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        {/* Inventory */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="flex flex-col gap-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                              Raw Materials Owned
-                            </label>
-                            <input
-                              type="number"
-                              value={ownedRawMaterials}
-                              onChange={(e) => setOwnedRawMaterials(Number(e.target.value))}
-                              className="albion-input h-12 px-4 rounded-lg text-right font-mono"
-                            />
-                          </div>
-
-                          <div className="flex flex-col gap-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                              Lower Tier Refined Owned
-                            </label>
-                            <input
-                              type="number"
-                              value={ownedLowerTierRefined}
-                              onChange={(e) => setOwnedLowerTierRefined(Number(e.target.value))}
-                              className="albion-input h-12 px-4 rounded-lg text-right font-mono"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Prices */}
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <div className="flex flex-col gap-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                              Raw Material Price
-                            </label>
-                            <input
-                              type="number"
-                              value={rawMaterialPrice}
-                              onChange={(e) => setRawMaterialPrice(Number(e.target.value))}
-                              className="albion-input h-12 px-4 rounded-lg text-right font-mono"
-                            />
-                          </div>
-
-                          <div className="flex flex-col gap-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                              Refined Price
-                            </label>
-                            <input
-                              type="number"
-                              value={refinedMaterialPrice}
-                              onChange={(e) => setRefinedMaterialPrice(Number(e.target.value))}
-                              className="albion-input h-12 px-4 rounded-lg text-right font-mono"
-                            />
-                          </div>
-
-                          <div className="flex flex-col gap-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                              Lower Tier Price
-                            </label>
-                            <input
-                              type="number"
-                              value={lowerTierRefinedPrice}
-                              onChange={(e) => setLowerTierRefinedPrice(Number(e.target.value))}
-                              className="albion-input h-12 px-4 rounded-lg text-right font-mono"
-                            />
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        {/* Multi-Tier: Material Type & Tier Range */}
-                        <div className="flex flex-col gap-2">
-                          <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                            Material Type
-                          </label>
-                          <div className="grid grid-cols-5 gap-2">
-                            {(Object.keys(MATERIAL_TYPES) as MaterialType[]).map((mat) => (
-                              <button
-                                key={mat}
-                                onClick={() => setMaterialType(mat)}
-                                className={`p-3 rounded-lg border transition-all capitalize ${
-                                  materialType === mat
-                                    ? "bg-albion-card border-primary text-white shadow-[0_0_10px_rgba(23,207,84,0.1)]"
-                                    : "bg-albion-panel border-albion-border text-albion-muted hover:border-albion-border-light hover:text-white"
-                                }`}
-                              >
-                                {mat}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="flex flex-col gap-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                              Start Tier
-                            </label>
-                            <select
-                              value={startTier}
-                              onChange={(e) => setStartTier(Number(e.target.value) as Tier)}
-                              className="albion-input h-12 pl-4 pr-10 rounded-lg appearance-none text-sm font-medium cursor-pointer"
-                            >
-                              {[3, 4, 5, 6, 7].map((t) => (
-                                <option key={t} value={t}>
-                                  T{t}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div className="flex flex-col gap-2">
-                            <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                              End Tier
-                            </label>
-                            <select
-                              value={endTier}
-                              onChange={(e) => setEndTier(Number(e.target.value) as Tier)}
-                              className="albion-input h-12 pl-4 pr-10 rounded-lg appearance-none text-sm font-medium cursor-pointer"
-                            >
-                              {[4, 5, 6, 7, 8].map((t) => (
-                                <option key={t} value={t}>
-                                  T{t}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                          <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                            Starting Materials Owned
-                          </label>
-                          <input
-                            type="number"
-                            value={ownedStartMaterials}
-                            onChange={(e) => setOwnedStartMaterials(Number(e.target.value))}
-                            className="albion-input h-12 px-4 rounded-lg text-right font-mono"
-                          />
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Player Specialization Card */}
-                <div className="bg-albion-panel rounded-xl border border-albion-border overflow-hidden shadow-lg shadow-black/20 mb-6">
-                  <div className="bg-albion-card/30 px-6 py-4 border-b border-albion-border flex justify-between items-center backdrop-blur-md">
-                    <h3 className="text-white font-display font-semibold flex items-center gap-2.5">
-                      <span className="material-symbols-outlined text-primary text-[20px]">psychology</span>
-                      Player Specialization
-                    </h3>
-                  </div>
-                  <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="flex flex-col gap-2">
-                      <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                        Mastery Level (0-100)
-                      </label>
-                      <input
-                        type="number"
-                        value={masteryLevel}
-                        onChange={(e) => setMasteryLevel(Math.min(100, Math.max(0, Number(e.target.value))))}
-                        className="albion-input h-12 px-4 rounded-lg text-right font-mono"
-                        min="0"
-                        max="100"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                        Tier Spec Level (0-100)
-                      </label>
-                      <input
-                        type="number"
-                        value={tierSpecLevel}
-                        onChange={(e) => setTierSpecLevel(Math.min(100, Math.max(0, Number(e.target.value))))}
-                        className="albion-input h-12 px-4 rounded-lg text-right font-mono"
-                        min="0"
-                        max="100"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <label className="text-xs font-bold uppercase tracking-wider text-albion-muted ml-1">
-                        Other Specs Total (0-400)
-                      </label>
-                      <input
-                        type="number"
-                        value={otherSpecsTotal}
-                        onChange={(e) => setOtherSpecsTotal(Math.min(400, Math.max(0, Number(e.target.value))))}
-                        className="albion-input h-12 px-4 rounded-lg text-right font-mono"
-                        min="0"
-                        max="400"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bonuses & Settings Card */}
-                <div className="bg-albion-panel rounded-xl border border-albion-border overflow-hidden shadow-lg shadow-black/20 mb-10">
-                  <div className="bg-albion-card/30 px-6 py-4 border-b border-albion-border flex justify-between items-center backdrop-blur-md">
-                    <h3 className="text-white font-display font-semibold flex items-center gap-2.5">
-                      <span className="material-symbols-outlined text-primary text-[20px]">percent</span>
-                      Efficiency & Bonuses
-                    </h3>
-                  </div>
-                  <div className="p-6 space-y-6">
-                    {/* Toggle Switches */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <button
-                        onClick={() => handleBonusCityToggle(!isBonusCity)}
-                        className={`p-4 rounded-lg border transition-all ${
-                          isBonusCity
-                            ? "bg-primary/10 border-primary text-white"
-                            : "bg-albion-panel border-albion-border text-albion-muted hover:border-albion-border-light"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 justify-center">
-                          <Crown className="w-5 h-5" />
-                          <span className="font-medium">Bonus City</span>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => handleRefiningDayToggle(!isRefiningDay)}
-                        disabled={!isBonusCity}
-                        className={`p-4 rounded-lg border transition-all ${
-                          isRefiningDay
-                            ? "bg-primary/10 border-primary text-white"
-                            : isBonusCity
-                            ? "bg-albion-panel border-albion-border text-albion-muted hover:border-albion-border-light"
-                            : "bg-albion-dark border-albion-border text-albion-muted/50 cursor-not-allowed"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 justify-center">
-                          <Sparkles className="w-5 h-5" />
-                          <span className="font-medium">Refining Day</span>
-                        </div>
-                      </button>
-
-                      <button
-                        onClick={() => handleUseFocusToggle(!useFocus)}
-                        className={`p-4 rounded-lg border transition-all ${
-                          useFocus
-                            ? "bg-primary/10 border-primary text-white"
-                            : "bg-albion-panel border-albion-border text-albion-muted hover:border-albion-border-light"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 justify-center">
-                          <Focus className="w-5 h-5" />
-                          <span className="font-medium">Use Focus</span>
-                        </div>
-                      </button>
-                    </div>
-
-                    <p className="text-xs text-albion-muted px-1">
-                      Toggle bonuses to calculate return rates. Focus cannot be used with Bonus City or Refining Day.
-                    </p>
-                  </div>
-                </div>
-              </>
-            )}
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="px-3 py-2 bg-primary hover:bg-primary-dark text-albion-dark rounded-lg transition-all flex items-center gap-2 text-sm font-medium shadow-[0_0_15px_rgba(23,207,84,0.3)]"
+                disabled={!hasResult}
+              >
+                <Save className="w-4 h-4" />
+                <span className="hidden md:inline">Save</span>
+              </button>
+            </div>
           </div>
+
+          {showSessions ? (
+            <div className="mb-8">
+              <SessionsList 
+                onLoadSession={handleLoadSession}
+                calculationMode={calculationMode}
+              />
+            </div>
+          ) : (
+            <div className="space-y-8">
+              <div className="flex bg-albion-panel rounded-lg p-1 border border-albion-border">
+                {['equipment', 'resources', 'multi-tier'].map(mode => (
+                  <button
+                    key={mode}
+                    onClick={() => setCalculationMode(mode)}
+                    className={`flex-1 py-3 px-4 rounded-md text-sm font-medium capitalize transition-all ${
+                      calculationMode === mode 
+                        ? 'bg-albion-card text-white shadow-md border border-albion-border-light' 
+                        : 'text-albion-muted hover:text-white'
+                    }`}
+                  >
+                    {mode.replace('-', ' ')}
+                  </button>
+                ))}
+              </div>
+
+              {calculationMode === 'equipment' && (
+                <EquipmentMode
+                  category={equipmentCategory}
+                  tier={equipmentTier}
+                  quantity={equipmentQuantity}
+                  onCategoryChange={(val) => setEquipmentCategory(val)}
+                  onTierChange={setEquipmentTier}
+                  onQuantityChange={setEquipmentQuantity}
+                />
+              )}
+
+              {calculationMode === 'resources' && (
+                <ResourceMode
+                  tier={startTier}
+                  ownedRawMaterials={ownedRawMaterials}
+                  ownedRefinedMaterials={ownedRefinedMaterials}
+                  onTierChange={setStartTier}
+                  onRawMaterialsChange={setOwnedRawMaterials}
+                  onRefinedMaterialsChange={setOwnedRefinedMaterials}
+                />
+              )}
+
+              {calculationMode === 'multi-tier' && (
+                <MultiTierMode
+                  startTier={startTier}
+                  endTier={endTier}
+                  startRawMaterials={ownedRawMaterials}
+                  onStartTierChange={setStartTier}
+                  onEndTierChange={setEndTier}
+                  onStartRawMaterialsChange={setOwnedRawMaterials}
+                />
+              )}
+
+              <PlayerSpecConfig
+                masteryLevel={masteryLevel}
+                tierSpecLevel={tierSpecLevel}
+                otherSpecsTotal={otherSpecsTotal}
+                onMasteryChange={setMasteryLevel}
+                onTierSpecChange={setTierSpecLevel}
+                onOtherSpecsChange={setOtherSpecsTotal}
+              />
+
+              <EfficiencyBonuses
+                isBonusCity={isBonusCity}
+                isRefiningDay={isRefiningDay}
+                useFocus={useFocus}
+                onBonusCityToggle={handleBonusCityToggle}
+                onRefiningDayToggle={handleRefiningDayToggle}
+                onUseFocusToggle={handleUseFocusToggle}
+              />
+            </div>
+          )}
         </section>
 
-        {/* RIGHT PANEL - Results Display (42-38%) */}
-        <section className="relative z-20 w-full lg:w-[42%] xl:w-[38%] flex flex-col bg-albion-panel h-full border-t lg:border-t-0 lg:border-l border-albion-border shadow-[-4px_0_24px_rgba(0,0,0,0.3)]">
-          <div className="lg:sticky lg:top-6 p-6">
-            <div className="bg-albion-panel rounded-xl border border-albion-border overflow-hidden shadow-lg shadow-black/20">
-              {/* Results Header */}
-              <div className="bg-albion-card/30 px-6 py-4 border-b border-albion-border backdrop-blur-md">
-                <h3 className="text-white font-display font-semibold flex items-center gap-2.5">
-                  <span className="material-symbols-outlined text-primary text-[20px]">monitoring</span>
-                  Results Display
-                </h3>
-              </div>
-
-              {hasResult ? (
-                <>
-                  {/* Profit Summary */}
-                  <div className="p-6 bg-albion-card/20 border-b border-albion-border">
-                    <div className="text-center space-y-3">
-                      <div className="text-xs font-bold uppercase tracking-wider text-albion-muted">
-                        Estimated Net Profit
-                      </div>
-                      <div
-                        className={`text-5xl font-display font-bold ${
-                          totalProfit >= 0
-                            ? "text-primary drop-shadow-[0_0_20px_rgba(23,207,84,0.4)]"
-                            : "text-red-500 drop-shadow-[0_0_20px_rgba(239,68,68,0.4)]"
-                        }`}
-                      >
-                        {totalProfit >= 0 ? "+" : ""}
-                        {formatCurrency(totalProfit)}
-                      </div>
-                      <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
-                        <span className="text-xs text-albion-muted">Profit Margin:</span>
-                        <span
-                          className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            profitMargin >= 0
-                              ? "bg-primary/20 text-primary border border-primary/30"
-                              : "bg-red-500/20 text-red-500 border border-red-500/30"
-                          }`}
-                        >
-                          {profitMargin.toFixed(2)}%
-                        </span>
-                        {useFocus && currentResult && 'profitPerFocus' in currentResult && currentResult.profitPerFocus > 0 && (
-                          <>
-                            <span className="text-xs text-albion-muted ml-2">Silver / Focus:</span>
-                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                              {formatCurrency(currentResult.profitPerFocus)}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Tab Navigation */}
-                  <div className="flex border-b border-albion-border bg-albion-card/10">
-                    <button className="tab-btn active flex-1 py-3 px-4 text-sm font-medium">
-                      Breakdown
-                    </button>
-                    <button className="tab-btn flex-1 py-3 px-4 text-sm font-medium" disabled>
-                      Cost Analysis
-                    </button>
-                    <button className="tab-btn flex-1 py-3 px-4 text-sm font-medium" disabled>
-                      Sell Orders
-                    </button>
-                  </div>
-
-                  {/* Breakdown Content */}
-                  <div className="p-6 space-y-5">
-                    {/* Resources Required */}
-                    {result.materialBreakdown && result.materialBreakdown.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-bold text-albion-muted uppercase tracking-wider mb-3">
-                          Resources Required
-                        </h4>
-                        <div className="space-y-2">
-                          {result.materialBreakdown.map((item, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center justify-between bg-albion-card p-3 rounded-lg hover:bg-albion-card/80 transition-colors"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded bg-albion-panel border border-albion-border flex items-center justify-center">
-                                  <span className="material-symbols-outlined text-primary text-[16px]">
-                                    inventory_2
-                                  </span>
-                                </div>
-                                <div>
-                                  <div className="text-white text-sm font-medium">{item.name}</div>
-                                  <div className="text-xs text-albion-muted">
-                                    {item.quantity.toLocaleString()} units
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-white text-sm font-mono font-semibold">
-                                  {formatCurrency(item.totalCost)}
-                                </div>
-                                <div className="text-xs text-albion-muted">
-                                  @{formatCurrency(item.unitPrice)}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Returned Materials */}
-                    {result.returnedMaterials && result.returnedMaterials.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-bold text-albion-muted uppercase tracking-wider mb-3">
-                          Returned Materials
-                        </h4>
-                        <div className="space-y-2">
-                          {result.returnedMaterials.map((item, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center justify-between bg-albion-card p-3 rounded-lg border-l-4 border-l-primary hover:bg-albion-card/80 transition-colors"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded bg-albion-panel border border-albion-border flex items-center justify-center">
-                                  <span className="material-symbols-outlined text-primary text-[16px]">
-                                    autorenew
-                                  </span>
-                                </div>
-                                <div>
-                                  <div className="text-white text-sm font-medium">{item.name}</div>
-                                  <div className="text-xs text-albion-muted">
-                                    {item.quantity.toLocaleString()} returned
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-primary text-sm font-mono font-semibold">
-                                  +{formatCurrency(item.totalValue)}
-                                </div>
-                                <div className="text-xs text-albion-muted">
-                                  @{formatCurrency(item.unitPrice)}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Journal Revenue */}
-                    {result.journalRevenue && result.journalRevenue > 0 && (
-                      <div>
-                        <h4 className="text-sm font-bold text-albion-muted uppercase tracking-wider mb-3">
-                          Journal Revenue
-                        </h4>
-                        <div className="bg-albion-card p-3 rounded-lg border-l-4 border-l-primary">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded bg-albion-panel border border-albion-border flex items-center justify-center">
-                                <span className="material-symbols-outlined text-primary text-[16px]">book</span>
-                              </div>
-                              <span className="text-white text-sm font-medium">Filled Journal</span>
-                            </div>
-                            <div className="text-primary text-sm font-mono font-semibold">
-                              +{formatCurrency(result.journalRevenue)}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Expenses & Fees */}
-                    <div>
-                      <h4 className="text-sm font-bold text-albion-muted uppercase tracking-wider mb-3">
-                        Expenses & Fees
-                      </h4>
-                      <div className="space-y-2">
-                        {result.focusCost && result.focusCost > 0 && (
-                          <div className="flex items-center justify-between bg-albion-card p-3 rounded-lg">
-                            <span className="text-albion-muted text-sm">Focus Cost</span>
-                            <span className="text-red-400 text-sm font-mono">
-                              -{formatCurrency(result.focusCost)}
-                            </span>
-                          </div>
-                        )}
-                        {result.taxCost && result.taxCost > 0 && (
-                          <div className="flex items-center justify-between bg-albion-card p-3 rounded-lg">
-                            <span className="text-albion-muted text-sm">Tax (6.5%)</span>
-                            <span className="text-red-400 text-sm font-mono">
-                              -{formatCurrency(result.taxCost)}
-                            </span>
-                          </div>
-                        )}
-                        {result.setupCost && result.setupCost > 0 && (
-                          <div className="flex items-center justify-between bg-albion-card p-3 rounded-lg">
-                            <span className="text-albion-muted text-sm">Station Usage Fee</span>
-                            <span className="text-red-400 text-sm font-mono">
-                              -{formatCurrency(result.setupCost)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Total Revenue & Cost Summary */}
-                    <div className="pt-4 border-t border-albion-border space-y-2">
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-albion-muted">Total Revenue</span>
-                        <span className="text-primary font-mono font-semibold">
-                          {formatCurrency(totalRevenue)}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-albion-muted">Total Cost</span>
-                        <span className="text-red-400 font-mono font-semibold">
-                          {formatCurrency(totalCost)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="p-12 text-center">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-albion-card border border-albion-border mb-4">
-                    <Calculator className="w-8 h-8 text-albion-muted" />
-                  </div>
-                  <p className="text-albion-muted text-sm">
-                    Configure your calculation and results will appear here
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
+        <section className="relative z-20 w-full lg:w-[40%] flex flex-col bg-albion-panel h-full border-t lg:border-t-0 lg:border-l border-albion-border p-6 shadow-[-4px_0_24px_rgba(0,0,0,0.3)]">
+          <ResultsDisplay 
+            hasResult={hasResult}
+            result={result}
+            useFocus={useFocus}
+          />
         </section>
       </main>
 
-      {/* Save Session Modal */}
       <SaveSessionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
