@@ -426,23 +426,23 @@ const RefiningCalculatorNew: React.FC = () => {
 
               {calculationMode === 'equipment' && (
                 <EquipmentMode
-                  category={equipmentCategory}
-                  tier={equipmentTier}
+                  category={selectedEquipmentCategory}
+                  tier={tier}
                   quantity={equipmentQuantity}
-                  onCategoryChange={(val) => setEquipmentCategory(val)}
-                  onTierChange={setEquipmentTier}
+                  onCategoryChange={(val) => setSelectedEquipmentCategory(val as any)}
+                  onTierChange={(val) => setTier(val as any)}
                   onQuantityChange={setEquipmentQuantity}
                 />
               )}
 
               {calculationMode === 'resources' && (
                 <ResourceMode
-                  tier={startTier}
+                  tier={tier}
                   ownedRawMaterials={ownedRawMaterials}
-                  ownedRefinedMaterials={ownedRefinedMaterials}
-                  onTierChange={setStartTier}
+                  ownedRefinedMaterials={ownedLowerTierRefined}
+                  onTierChange={(val) => setTier(val as any)}
                   onRawMaterialsChange={setOwnedRawMaterials}
-                  onRefinedMaterialsChange={setOwnedRefinedMaterials}
+                  onRefinedMaterialsChange={setOwnedLowerTierRefined}
                 />
               )}
 
@@ -450,10 +450,10 @@ const RefiningCalculatorNew: React.FC = () => {
                 <MultiTierMode
                   startTier={startTier}
                   endTier={endTier}
-                  startRawMaterials={ownedRawMaterials}
-                  onStartTierChange={setStartTier}
-                  onEndTierChange={setEndTier}
-                  onStartRawMaterialsChange={setOwnedRawMaterials}
+                  startRawMaterials={ownedStartMaterials}
+                  onStartTierChange={(val) => setStartTier(val as any)}
+                  onEndTierChange={(val) => setEndTier(val as any)}
+                  onStartRawMaterialsChange={setOwnedStartMaterials}
                 />
               )}
 
